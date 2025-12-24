@@ -1,0 +1,10 @@
+numpy
+pandas
+scikit-learn
+torch                 # if using PyTorch for embeddings
+transformers          # for NLP embeddings
+sentence-transformers # if using sentence transformers
+opencv-python         # if using image processing
+weaviate-client       # if using Weaviate vector DB
+structlog
+beartype
