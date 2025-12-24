@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+*.sqlite3
+
+# Node
+node_modules/
+build/
+dist/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Data / models
+data/
+models/
+*.h5
+*.pt
+*.ckpt
