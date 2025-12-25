@@ -40,18 +40,46 @@ def update_property(property_obj, vector: list[float]):
         vector=vector,
     )
 
-
-def query_properties(vector: list[float], top_k: int = 10, filters: dict = None):
+def apply_filters(query, filters: dict):
     """
-    Returns top_k similar properties based on vector similarity.
-    filters: optional dictionary to filter metadata fields
+    Applies metadata filters to a Weaviate query.
+    """
+    where = {"operator": "And", "operands": []}
+
+    for field, value in filters.items():
+        where["operands"].append({
+            "path": [field],
+            "operator": "Equal",
+            "valueText": value if isinstance(value, str) else None,
+            "valueNumber": value if isinstance(value, (int, float)) else None,
+        })
+
+    return query.with_where(where)
+
+def query_properties(
+    vector: list[float],
+    top_k: int = 10,
+    radius: float | None = None,
+    filters: dict | None = None,
+):
+    """
+    Returns similar properties using vector similarity with optional constraints.
     """
     client = get_client()
+
     query = client.query.get(
-        "Property", ["title", "location", "price_lkr", "bedrooms", "bathrooms"]
+        "Property",
+        ["title", "location", "price_lkr", "bedrooms", "bathrooms", "property_type"]
     )
-    query = query.with_near_vector({"vector": vector, "certainty": 0.7})
+
+    near_vector = {"vector": vector}
+    if radius is not None:
+        near_vector["certainty"] = radius
+
+    query = query.with_near_vector(near_vector)
     query = query.with_limit(top_k)
-    # TODO: Apply filters if needed
-    results = query.do()
-    return results
+
+    if filters:
+        query = apply_filters(query, filters)
+
+    return query.do()
