@@ -5,7 +5,7 @@ import csv
 import pandas as pd
 import openai
 from app.storage.connections import get_client
-from app.storage.operations import insert_property , insert_objects_with_vectors # your function
+from app.storage.operations import  insert_objects_with_vectors # your function
 # If you also have update_property, can import it similarly
 from sentence_transformers import SentenceTransformer
 

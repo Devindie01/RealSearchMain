@@ -2,6 +2,9 @@ from app.storage.connections import get_client
 import weaviate
 from weaviate.classes.config import Configure
 from app.storage.config import  WEAVIATE_URL , WEAVIATE_API_KEY
+from weaviate.classes.init import AdditionalConfig, Timeout, Auth
+from weaviate.classes.query import Filter
+
 # function to create a collection, then stote data objects with vectors
 
 def insert_objects_with_vectors(
@@ -47,6 +50,107 @@ def insert_objects_with_vectors(
         print(
             f"Imported {len(data_objects)} objects with vectors into the '{collection_name}' collection"
         )
+
+
+
+def search_real_search_collection(query_text: str, limit: int = 3):
+    """
+    Connects to Weaviate, accesses 'RealSearch', and retrieves data using vector search.
+    """
+
+    # 1. Retrieve environment variables
+    url =  WEAVIATE_URL
+    api_key =  WEAVIATE_API_KEY
+
+    if not url or not api_key:
+        print("Error: WEAVIATE_URL or WEAVIATE_API_KEY is missing.")
+        return
+
+    # 2. Connect using a Context Manager (automatically closes connection after use)
+    try:
+        with weaviate.connect_to_weaviate_cloud(
+            cluster_url=url,
+            auth_credentials=Auth.api_key(api_key),
+            additional_config=AdditionalConfig(timeout=Timeout(init=10)),
+        ) as client:
+
+            # 3. Check if collection exists before querying
+            if not client.collections.exists("RealSearch"):
+                print(f"Collection 'RealSearch' does not exist in this cluster.")
+                return
+
+            # 4. Get the collection
+            real_search_collection = client.collections.get("RealSearch")
+
+            # 5. Perform the query
+            # We use 'near_text' for semantic search.
+            # If you just want to list data without similarity, use .fetch_objects()
+            response = real_search_collection.query.near_text(
+                query=query_text,
+                limit=limit
+            )
+
+            # 6. Process and return/print results
+            results = []
+            for obj in response.objects:
+                # obj.properties contains the data fields
+                results.append(obj.properties)
+#                 print(f"Found: {obj.properties}")
+
+            return results
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def search_real_search_collection_with_filters(query_text: str, filters=None, limit: int = 3):
+    """
+    Connects to Weaviate and searches 'RealSearch'.
+
+    Args:
+        query_text: The text to search for semantically.
+        filters: A Weaviate Filter object (optional).
+        limit: Number of results to return.
+    """
+    url =  WEAVIATE_URL
+    api_key =  WEAVIATE_API_KEY
+
+    if not url or not api_key:
+        print("Error: WEAVIATE_URL or WEAVIATE_API_KEY is missing.")
+        return
+
+    try:
+        with weaviate.connect_to_weaviate_cloud(
+            cluster_url=url,
+            auth_credentials=Auth.api_key(api_key),
+            additional_config=AdditionalConfig(timeout=Timeout(init=10)),
+        ) as client:
+
+            # Check if collection exists
+            if not client.collections.exists("RealSearch"):
+                print("Collection 'RealSearch' not found.")
+                return
+
+            real_search = client.collections.get("RealSearch")
+
+            # Perform query with the passed 'filters'
+            response = real_search.query.near_text(
+                query=query_text,
+                limit=limit,
+                filters=filters  # <--- Filters are applied here if provided
+            )
+
+            results = []
+            for obj in response.objects:
+                results.append(obj.properties)
+                # Printing title and location for quick verification
+                title = obj.properties.get('title', 'No Title')
+                town = obj.properties.get('nearestTown', 'Unknown')
+                print(f"Found: {title} | Town: {town}")
+
+            return results
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
 # def insert_property(property_obj, vector: list[float]):
 #     """
 #     Inserts a property into the vector DB with metadata and vector.
