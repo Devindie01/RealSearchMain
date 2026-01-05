@@ -52,7 +52,7 @@ def insert_objects_with_vectors(
         )
 
 
-
+# this function can be used for RealSearch collection, we made it by weaviate console
 def search_real_search_collection(query_text: str, limit: int = 3):
     """
     Connects to Weaviate, accesses 'RealSearch', and retrieves data using vector search.
@@ -102,6 +102,7 @@ def search_real_search_collection(query_text: str, limit: int = 3):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+# this function can be used for RealSearch collection, we made it by weaviate console
 def search_real_search_collection_with_filters(query_text: str, filters=None, limit: int = 3):
     """
     Connects to Weaviate and searches 'RealSearch'.
