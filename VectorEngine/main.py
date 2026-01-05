@@ -1,7 +1,12 @@
 import json
 from app.query.executor.query_executor import chain, QueryEmbedder
-from app.query.formatter import create_weaviate_filter, execute_search
+from app.query.formatter import (
+    create_weaviate_filter,
+    execute_search,
+    execute_weighted_search,
+)
 from app.query import query_expander
+from app.storage.connections import get_client
 
 
 def main():
@@ -54,9 +59,35 @@ def main():
 
         print("\nFull Extracted Object (JSON):")
         print(json.dumps(result_segment.model_dump(), indent=4))
+
+        # 4. Execute the search
+        print("\n[4/4] Executing search on Weaviate...")
+        with get_client() as client:
+            # results = execute_weighted_search(
+            #     expaned_query, query_vector, weights, client
+            # )
+            results = execute_search(user_input, query_vector, result_segment, client)
+
+        # Print results
+        print("\n" + "=" * 50)
+        print("SEARCH RESULTS")
+        print("=" * 50)
+        if results:
+            for i, obj in enumerate(results, 1):
+                print(f"\nResult {i}:")
+                print(f"  Title: {obj.properties.get('title', 'N/A')}")
+                print(f"  Location: {obj.properties.get('location', 'N/A')}")
+                print(f"  Price (LKR): {obj.properties.get('price_lkr', 'N/A')}")
+                print(f"  Bedrooms: {obj.properties.get('bedrooms', 'N/A')}")
+                print(f"  Bathrooms: {obj.properties.get('bathrooms', 'N/A')}")
+                print(f"  Property Type: {obj.properties.get('property_type', 'N/A')}")
+        else:
+            print("No results found.")
+
         print("=" * 50)
 
     except Exception as e:
+
         print(f"ERROR in pipeline: {e}")
 
 
