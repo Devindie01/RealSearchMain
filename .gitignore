@@ -23,3 +23,5 @@ models/
 *.h5
 *.pt
 *.ckpt
+
+.env
