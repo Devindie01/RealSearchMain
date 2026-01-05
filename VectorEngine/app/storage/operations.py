@@ -3,6 +3,7 @@ import weaviate
 from weaviate.classes.config import Configure
 from app.storage.config import  WEAVIATE_URL , WEAVIATE_API_KEY
 # function to create a collection, then stote data objects with vectors
+
 def insert_objects_with_vectors(
     collection_name: str,
     data_objects: list[dict],
