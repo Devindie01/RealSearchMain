@@ -1,11 +1,12 @@
-from app.storage.connections import get_client
+from .connections import get_client
 import weaviate
 from weaviate.classes.config import Configure
-from app.storage.config import  WEAVIATE_URL , WEAVIATE_API_KEY
+from .config import WEAVIATE_URL, WEAVIATE_API_KEY
 from weaviate.classes.init import AdditionalConfig, Timeout, Auth
 from weaviate.classes.query import Filter
 
 # function to create a collection, then stote data objects with vectors
+
 
 def insert_objects_with_vectors(
     collection_name: str,
@@ -23,7 +24,7 @@ def insert_objects_with_vectors(
     """
 
     weaviate_url = WEAVIATE_URL
-    weaviate_api_key =  WEAVIATE_API_KEY
+    weaviate_api_key = WEAVIATE_API_KEY
 
     with weaviate.connect_to_weaviate_cloud(
         cluster_url=weaviate_url,
@@ -59,8 +60,8 @@ def search_real_search_collection(query_text: str, limit: int = 3):
     """
 
     # 1. Retrieve environment variables
-    url =  WEAVIATE_URL
-    api_key =  WEAVIATE_API_KEY
+    url = WEAVIATE_URL
+    api_key = WEAVIATE_API_KEY
 
     if not url or not api_key:
         print("Error: WEAVIATE_URL or WEAVIATE_API_KEY is missing.")
@@ -86,8 +87,7 @@ def search_real_search_collection(query_text: str, limit: int = 3):
             # We use 'near_text' for semantic search.
             # If you just want to list data without similarity, use .fetch_objects()
             response = real_search_collection.query.near_text(
-                query=query_text,
-                limit=limit
+                query=query_text, limit=limit
             )
 
             # 6. Process and return/print results
@@ -95,15 +95,18 @@ def search_real_search_collection(query_text: str, limit: int = 3):
             for obj in response.objects:
                 # obj.properties contains the data fields
                 results.append(obj.properties)
-#                 print(f"Found: {obj.properties}")
+            #                 print(f"Found: {obj.properties}")
 
             return results
 
     except Exception as e:
         print(f"An error occurred: {e}")
 
+
 # this function can be used for RealSearch collection, we made it by weaviate console
-def search_real_search_collection_with_filters(query_text: str, filters=None, limit: int = 3):
+def search_real_search_collection_with_filters(
+    query_text: str, filters=None, limit: int = 3
+):
     """
     Connects to Weaviate and searches 'RealSearch'.
 
@@ -112,8 +115,8 @@ def search_real_search_collection_with_filters(query_text: str, filters=None, li
         filters: A Weaviate Filter object (optional).
         limit: Number of results to return.
     """
-    url =  WEAVIATE_URL
-    api_key =  WEAVIATE_API_KEY
+    url = WEAVIATE_URL
+    api_key = WEAVIATE_API_KEY
 
     if not url or not api_key:
         print("Error: WEAVIATE_URL or WEAVIATE_API_KEY is missing.")
@@ -137,21 +140,23 @@ def search_real_search_collection_with_filters(query_text: str, filters=None, li
             response = real_search.query.near_text(
                 query=query_text,
                 limit=limit,
-                filters=filters  # <--- Filters are applied here if provided
+                filters=filters,  # <--- Filters are applied here if provided
             )
 
             results = []
             for obj in response.objects:
                 results.append(obj.properties)
                 # Printing title and location for quick verification
-                title = obj.properties.get('title', 'No Title')
-                town = obj.properties.get('nearestTown', 'Unknown')
+                title = obj.properties.get("title", "No Title")
+                town = obj.properties.get("nearestTown", "Unknown")
                 print(f"Found: {title} | Town: {town}")
 
             return results
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
 # def insert_property(property_obj, vector: list[float]):
 #     """
 #     Inserts a property into the vector DB with metadata and vector.
@@ -228,6 +233,7 @@ def search_real_search_collection_with_filters(query_text: str, filters=None, li
 #         vector=vector,
 #     )
 
+
 def apply_filters(query, filters: dict):
     """
     Applies metadata filters to a Weaviate query.
@@ -235,14 +241,17 @@ def apply_filters(query, filters: dict):
     where = {"operator": "And", "operands": []}
 
     for field, value in filters.items():
-        where["operands"].append({
-            "path": [field],
-            "operator": "Equal",
-            "valueText": value if isinstance(value, str) else None,
-            "valueNumber": value if isinstance(value, (int, float)) else None,
-        })
+        where["operands"].append(
+            {
+                "path": [field],
+                "operator": "Equal",
+                "valueText": value if isinstance(value, str) else None,
+                "valueNumber": value if isinstance(value, (int, float)) else None,
+            }
+        )
 
     return query.with_where(where)
+
 
 def query_properties(
     vector: list[float],
@@ -257,7 +266,7 @@ def query_properties(
 
     query = client.query.get(
         "Property",
-        ["title", "location", "price_lkr", "bedrooms", "bathrooms", "property_type"]
+        ["title", "location", "price_lkr", "bedrooms", "bathrooms", "property_type"],
     )
 
     near_vector = {"vector": vector}

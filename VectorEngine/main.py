@@ -7,6 +7,7 @@ from app.query.formatter import (
 )
 from app.query import query_expander
 from app.storage.connections import get_client
+from app.storage.operations import search_real_search_collection_with_filters
 
 
 def main():
@@ -62,25 +63,29 @@ def main():
 
         # 4. Execute the search
         print("\n[4/4] Executing search on Weaviate...")
-        with get_client() as client:
-            # results = execute_weighted_search(
-            #     expaned_query, query_vector, weights, client
-            # )
-            results = execute_search(user_input, query_vector, result_segment, client)
+        results = search_real_search_collection_with_filters(expaned_query, wv_filter, limit=10)
+        # with get_client() as client:
+        #     # results = execute_weighted_search(
+        #     #     expaned_query, query_vector, weights, client
+        #     # )
+        #     results = execute_search(user_input, query_vector, result_segment, client)
 
         # Print results
         print("\n" + "=" * 50)
         print("SEARCH RESULTS")
         print("=" * 50)
+
         if results:
             for i, obj in enumerate(results, 1):
+                props = obj
+
                 print(f"\nResult {i}:")
-                print(f"  Title: {obj.properties.get('title', 'N/A')}")
-                print(f"  Location: {obj.properties.get('location', 'N/A')}")
-                print(f"  Price (LKR): {obj.properties.get('price_lkr', 'N/A')}")
-                print(f"  Bedrooms: {obj.properties.get('bedrooms', 'N/A')}")
-                print(f"  Bathrooms: {obj.properties.get('bathrooms', 'N/A')}")
-                print(f"  Property Type: {obj.properties.get('property_type', 'N/A')}")
+                print(f"  Title: {props.get('title')}")
+                print(f"  Location: {props.get('location', props.get('nearestTown'))}")
+                print(f"  Price (LKR): {props.get('priceLkr')}")
+                print(f"  Bedrooms: {props.get('bedrooms')}")
+                print(f"  Bathrooms: {props.get('bathrooms')}")
+                print(f"  Property Type: {props.get('propertyType')}")
         else:
             print("No results found.")
 
