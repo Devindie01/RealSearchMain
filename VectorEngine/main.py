@@ -11,7 +11,7 @@ from app.storage.connections import get_client
 
 def main():
     print("--- Property Search Pipeline Test ---")
-    user_input = input("Enter your search query: ")
+    user_input = input("Enter your search query: ")   # this comes from the frontend
 
     try:
         # Query expansion
@@ -68,7 +68,8 @@ def main():
             # )
             results = execute_search(user_input, query_vector, result_segment, client)
 
-        # Print results
+        # Print results                  # send results to the front end
+
         print("\n" + "=" * 50)
         print("SEARCH RESULTS")
         print("=" * 50)
