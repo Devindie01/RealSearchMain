@@ -1,22 +1,55 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlmodel import Session, select
 from fastapi.security import OAuth2PasswordRequestForm
-from app.core.security import verify_password, create_access_token
+from app.db.session import get_session
+from app.models.user import User
+from app.core import security
+from app.schemas.user import UserCreate, UserPublic, Token
 
 router = APIRouter()
 
-# Dummy database for "the best child" to play with
-FAKE_USERS_DB = {
-    "student@example.com": {
-        "username": "student@example.com",
-        "hashed_password": hash_password("secret123"), # This would be in your DB
-    }
-}
-
-@router.post("/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = FAKE_USERS_DB.get(form_data.username)
-    if not user or not verify_password(form_data.password, user["hashed_password"]):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+# signup route
+@router.post("/signup", response_model=UserPublic)
+def signup(user_in: UserCreate, db: Session = Depends(get_session)):
+    # email already exists?
+    statement = select(User).where(User.email == user_in.email)
+    existing_user = db.exec(statement).first()
     
-    access_token = create_access_token(data={"sub": user["username"]})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User already registered")
+    
+    # user instance
+    new_user = User(
+        email=user_in.email,
+        full_name=user_in.full_name,
+        hashed_password=security.hash_password(user_in.password), # Scramble here!
+        is_active=True
+    )
+    
+    # Save to the database
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+# login route
+@router.post("/login", response_model=Token)
+async def login(
+    db: Session = Depends(get_session),
+    form_data: OAuth2PasswordRequestForm = Depends()
+):
+    # username is email
+    statement = select(User).where(User.email == form_data.username)
+    user = db.exec(statement).first()
+    
+    # user exists and password is correct?
+    if not user or not security.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+        )
+
+    # JWT token creation
+    access_token = security.create_access_token(subject=user.email)
+    
     return {"access_token": access_token, "token_type": "bearer"}

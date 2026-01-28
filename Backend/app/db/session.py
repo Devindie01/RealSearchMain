@@ -1,17 +1,15 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.core.config import settings
+from sqlmodel import SQLModel, Session, create_engine
+from typing import Generator
 
-# 1. Create the Database Engine
-engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
+sqlite_file_name = "database.db"
+sqlite_url = f"sqlite:///{sqlite_file_name}"
 
-# 2. Create the SessionLocal class (Interface to talk to DB)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+connect_args = {"check_same_thread": False}
+engine = create_engine(sqlite_url, connect_args=connect_args)
 
-# 3. The Dependency function used in your API routes
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+def init_db():
+    SQLModel.metadata.create_all(engine)
+
+def get_session() -> Generator[Session, None, None]:
+    with Session(engine) as session:
+        yield session

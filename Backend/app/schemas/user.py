@@ -12,7 +12,7 @@ class UserCreate(UserBase):
     password: str
 
 # Properties to return to client (NEVER return the password)
-class User(UserBase):
+class UserPublic(UserBase):
     id: int
     
     class Config:
