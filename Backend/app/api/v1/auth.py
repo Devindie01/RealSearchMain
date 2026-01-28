@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from fastapi.security import OAuth2PasswordRequestForm
 from app.db.session import get_session
-from app.models.user import User
+from app.models.user import User, UserCreate, UserPublic, Token
 from app.core import security
-from app.schemas.user import UserCreate, UserPublic, Token
 
 router = APIRouter()
 
@@ -12,7 +11,7 @@ router = APIRouter()
 @router.post("/signup", response_model=UserPublic)
 def signup(user_in: UserCreate, db: Session = Depends(get_session)):
     # email already exists?
-    statement = select(User).where(User.email == user_in.email)
+    statement = select(User).where(User.email == user_in.email.lower().strip())
     existing_user = db.exec(statement).first()
     
     if existing_user:
@@ -20,7 +19,7 @@ def signup(user_in: UserCreate, db: Session = Depends(get_session)):
     
     # user instance
     new_user = User(
-        email=user_in.email,
+        email=user_in.email.lower().strip(),
         full_name=user_in.full_name,
         hashed_password=security.hash_password(user_in.password), # Scramble here!
         is_active=True
@@ -39,7 +38,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
     # username is email
-    statement = select(User).where(User.email == form_data.username)
+    statement = select(User).where(User.email == form_data.username.lower().strip())
     user = db.exec(statement).first()
     
     # user exists and password is correct?
