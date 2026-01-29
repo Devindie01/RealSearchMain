@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from fastapi.security import OAuth2PasswordRequestForm
 from app.db.session import get_session
 from app.models.user import User, UserCreate, UserPublic, Token
-from app.core import security
+from app.core import security 
 
 router = APIRouter()
 

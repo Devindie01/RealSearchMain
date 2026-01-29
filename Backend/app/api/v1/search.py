@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Header, Query
-from app.schemas.property import PropertyResponse
+from app.schemas.property import PropertyResponse 
 from app.services.search_service import SearchService
 from typing import List, Optional
 import uuid

@@ -24,4 +24,8 @@ models/
 *.pt
 *.ckpt
 
+.next/
+node_modules/
+*.log
+
 .env
