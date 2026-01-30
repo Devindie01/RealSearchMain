@@ -124,45 +124,56 @@ export function Header() {
 
               {/* Buyer Assistance */}
               <NavigationMenuItem>
-                <Link href="/buyer-assistance" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    Buyer Assistance
+                <Link href="/buyer-assistance">
+                  <NavigationMenuLink
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <span>Buyer Assistance</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
 
               {/* Seller Assistance */}
               <NavigationMenuItem>
-                <Link href="/seller-assistance" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    Seller Assistance
+                <Link href="/seller-assistance">
+                  <NavigationMenuLink 
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <span>Seller Assistance</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
 
               {/* List Your Property */}
               <NavigationMenuItem>
-                <Link href="/sell" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    List Your Property
+                <Link href="/sell">
+                  <NavigationMenuLink 
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <span>List Your Property</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
 
               {/* Market Insights */}
               <NavigationMenuItem>
-                <Link href="/market-insights" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    Market Insights
+                <Link href="/market-insights">
+                  <NavigationMenuLink 
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <span>Market Insights</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
 
               {/* Contact Us */}
               <NavigationMenuItem>
-                <Link href="/contact" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    Contact Us
+                <Link href="/contact">
+                  <NavigationMenuLink 
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <span>Contact Us</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
