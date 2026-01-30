@@ -31,42 +31,52 @@ export default function SignupPage() {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
-    // Validation
+    // 1. Validation (Keep your existing checks)
     if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
       setError("Please fill in all fields")
       return
     }
-
-    if (!formData.email.includes("@")) {
-      setError("Please enter a valid email")
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters")
-      return
-    }
-
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
       return
     }
 
-    if (typeof window !== "undefined") {
-      const userData = {
-        fullName: formData.fullName,
-        email: formData.email,
-        isLoggedIn: true,
-      }
-      localStorage.setItem("realSearchUser", JSON.stringify(userData))
+    // 2. Prepare data for FastAPI (Must match UserCreate schema)
+    const signupData = {
+      full_name: formData.fullName, // Backend expects full_name
+      email: formData.email,
+      password: formData.password,
     }
 
-    console.log("[v0] Signup successful:", { email: formData.email })
-    router.push("/")
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signupData),
+      });
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Handle backend errors (e.g., User already exists)
+        throw new Error(data.detail || "Signup failed")
+      }
+
+      // 3. Success! 
+      console.log("Signup successful:", data)
+      
+      // Optional: Auto-login after signup or redirect to login
+      router.push("/login")
+      
+    } catch (err: any) {
+      setError(err.message)
+    }
   }
 
   return (

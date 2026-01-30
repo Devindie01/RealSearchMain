@@ -13,6 +13,7 @@ import { CheckCircle2, MapPin } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
+import { AuthGuard } from "@/components/auth-guard" // 1. Import the Guard
 
 export default function SellPropertyPage() {
   const router = useRouter()
@@ -33,6 +34,13 @@ export default function SellPropertyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const token = localStorage.getItem("realSearchToken")
+    if (!token) {
+      alert("Your session has expired. Please log in again.")
+      window.location.href = "/login"
+      return
+    }
 
     // 1. Map your form state to the Backend Schema
     const payload = {
@@ -56,14 +64,14 @@ export default function SellPropertyPage() {
 
     try {
       // 2. Get the token from storage
-      // const token = localStorage.getItem("token") 
+      const token = localStorage.getItem("realSearchToken") 
 
       // 3. Send to Backend
       const response = await fetch("http://localhost:8000/api/v1/upload", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}` 
         },
         body: JSON.stringify(payload),
       })
@@ -125,6 +133,7 @@ export default function SellPropertyPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       <Header />
 
@@ -343,5 +352,6 @@ export default function SellPropertyPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   )
 }

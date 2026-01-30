@@ -42,20 +42,39 @@ export function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userName, setUserName] = useState("")
 
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const userData = localStorage.getItem("realSearchUser")
+  //     if (userData) {
+  //       const user = JSON.parse(userData)
+  //       setIsLoggedIn(true)
+  //       setUserName(user.fullName)
+  //     }
+  //   }
+  // }, [])
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("realSearchUser")
-      if (userData) {
-        const user = JSON.parse(userData)
-        setIsLoggedIn(true)
-        setUserName(user.fullName)
+  const userData = localStorage.getItem("realSearchUser");
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      // Use optional chaining (?.) to prevent crashes
+      if (user && (user.fullName || user.full_name)) {
+        setIsLoggedIn(true);
+        setUserName(user.fullName || user.full_name);
       }
+    } catch (e) {
+      console.error("Failed to parse user data", e);
+      localStorage.removeItem("realSearchUser"); // Clear corrupt data
     }
-  }, [])
+  }
+}, []);
 
   const handleLogout = () => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("realSearchUser")
+      localStorage.removeItem("realSearchUser");
+      localStorage.removeItem("realSearchToken");
+      // localStorage.clear();
       setIsLoggedIn(false)
       setUserName("")
       router.push("/")

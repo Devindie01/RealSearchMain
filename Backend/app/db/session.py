@@ -12,13 +12,17 @@ if sqlite_url.startswith("sqlite"):
 
 engine = create_engine(sqlite_url, connect_args=connect_args)
 
+
 def init_db():
-    # 3. CRITICAL: Import your models here. 
+    # 3. CRITICAL: Import your models here.
     # This "registers" the tables with SQLModel.metadata
     from app.models.user import User
-    # from app.models.property import Property 
-    
+    from app.models.property import Property
+
+    # from app.models.property import Property
+
     SQLModel.metadata.create_all(engine)
+
 
 def get_session() -> Generator[Session, None, None]:
     with Session(engine) as session:

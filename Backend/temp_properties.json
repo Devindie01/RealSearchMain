@@ -1,0 +1,40 @@
+[
+    {
+        "property": {
+            "title": "House near beach",
+            "description": "Beautiful house",
+            "property_type": "House",
+            "contract_type": "Sale",
+            "price_lkr": 450000.0,
+            "location": "Panadura",
+            "bedrooms": 2,
+            "bathrooms": 2,
+            "land_size_sqm": 1200.0,
+            "amenities": []
+        },
+        "owner": {
+            "owner_name": "Current User",
+            "owner_contact": "Contact via platform"
+        },
+        "created_by": "Guest"
+    },
+    {
+        "property": {
+            "title": "House near beach",
+            "description": "Beautiful house",
+            "property_type": "House",
+            "contract_type": "Sale",
+            "price_lkr": 450000.0,
+            "location": "Panadura",
+            "bedrooms": 2,
+            "bathrooms": 2,
+            "land_size_sqm": 1200.0,
+            "amenities": []
+        },
+        "owner": {
+            "owner_name": "Current User",
+            "owner_contact": "Contact via platform"
+        },
+        "created_by": "Guest"
+    }
+]
