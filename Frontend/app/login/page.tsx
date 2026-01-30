@@ -143,10 +143,11 @@ export default function LoginPage() {
                   <span className="bg-background px-2 text-muted-foreground">or</span>
                 </div>
               </div>
-
+              <Link href="/signup" className="text-primary hover:underline font-semibold">
               <Button type="button" variant="outline" className="w-full bg-transparent border-primary/20">
                 Sign Up
               </Button>
+              </Link>
             </form>
 
             <div className="mt-6 text-center text-sm">
