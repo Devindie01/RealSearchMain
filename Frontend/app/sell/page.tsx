@@ -301,7 +301,7 @@ export default function SellPropertyPage() {
                     className="w-full bg-transparent"
                   >
                     <MapPin className="h-4 w-4 mr-2" />
-                    Use Current Location
+                    Choose Location
                   </Button>
 
                   {formData.lat && formData.lng && (
