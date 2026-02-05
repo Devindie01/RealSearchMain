@@ -42,7 +42,7 @@ def get_query_expansion(user_input: str):
     2. A dictionary of scaled integer weights (1-10)
     """
     # 1. Run the DSPy prediction
-    expander = dspy.Predict(ExpandQuery)
+    expander = dspy.ChainOfThought(ExpandQuery)
     prediction = expander(user_query=user_input)
     
     # 2. Extract weights using regex (handles "key:value" string formats)
