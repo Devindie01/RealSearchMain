@@ -16,8 +16,10 @@ def signup(user_in: UserCreate, db: Session = Depends(get_session)):
     existing_user = db.exec(statement).first()
 
     if existing_user:
-        raise HTTPException(status_code=400, detail="User already registered")
-
+        raise HTTPException(
+            status_code=400, 
+            detail="User already registered")
+    
     # user instance
     new_user = User(
         email=user_in.email.lower().strip(),
