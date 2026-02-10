@@ -27,7 +27,7 @@ def create_weaviate_filter(segment: QuerySegment):
 
     if segment.land_size:
         filters.append(
-            Filter.by_property("landSizePerches").greater_or_equal(segment.land_size)
+            Filter.by_property("landSize").greater_or_equal(segment.land_size)
         )
 
     # Combine all filters using AND logic (&)

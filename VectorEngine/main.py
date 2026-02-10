@@ -63,7 +63,9 @@ def main():
 
         # 4. Execute the search
         print("\n[4/4] Executing search on Weaviate...")
-        results = search_real_search_collection_with_filters(expaned_query, wv_filter, limit=10)
+        results = search_real_search_collection_with_filters(
+            expaned_query, wv_filter, limit=10
+        )
         # with get_client() as client:
         #     # results = execute_weighted_search(
         #     #     expaned_query, query_vector, weights, client

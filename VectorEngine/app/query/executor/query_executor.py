@@ -19,7 +19,7 @@ class QueryEmbedder:
 
 def get_chain():
     llm = ChatOpenAI(
-        model="mistralai/devstral-2512:free",
+        model="google/gemini-2.0-flash-lite-001",
         temperature=0,
         openai_api_key=os.getenv("OPENROUTER_API_KEY"),
         openai_api_base="https://openrouter.ai/api/v1",
