@@ -1,5 +1,6 @@
 # Example configuration for Weaviate
-WEAVIATE_URL = "5lsaatlqqjelctwl7npf2w.c0.asia-southeast1.gcp.weaviate.cloud"  # or cloud endpoint
-WEAVIATE_API_KEY = "aTdkNXFWbkt4TDJPeVY4WF9ESFNQWENtYzhzR05meUFWdGl5aHVidFcwT2JKdEJRL3NFWDNOSVRha05vPV92MjAw"
+WEAVIATE_URL = "jweptcbori2edffd6sgcag.c0.asia-southeast1.gcp.weaviate.cloud"  # or cloud endpoint
+WEAVIATE_API_KEY = "SUYrRHNSVWFhQmpZWG5BdV9oakhGWExmbmNpSnh0TmZKKzVqWitVa21ENFpyd2syWUFZdlo1ZEZTajVFPV92MjAw"
+
 # admin api - aTdkNXFWbkt4TDJPeVY4WF9ESFNQWENtYzhzR05meUFWdGl5aHVidFcwT2JKdEJRL3NFWDNOSVRha05vPV92MjAw
 # user api - VUJ4RFB4Skx5bGNiY3Z4ZV84MDVwRXMvZnY4YzZEMHI0UDJTOGV4RnZMUXNiNVNXd3kydStBSXdaeTFJPV92MjAw
