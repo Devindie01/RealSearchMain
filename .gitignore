@@ -19,7 +19,6 @@ dist/
 
 # Data / models
 data/
-models/
 *.h5
 *.pt
 *.ckpt

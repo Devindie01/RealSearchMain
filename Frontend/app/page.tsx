@@ -122,63 +122,80 @@ export default function PropertySearchPage() {
   const [isSearchMode, setIsSearchMode] = useState(false)
 
   useEffect(() => {
-  const fetchHomeProperties = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("http://localhost:8000/api/v1/featured");
-      const data = await response.json();
-      setFeaturedProperties(data.results);
-    } catch (error) {
-      console.error("Home page fetch error:", error);
-    }finally {
-      setIsLoading(false);
-    }
-  };
-  fetchHomeProperties();
-}, []);
+    const fetchHomeProperties = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("http://localhost:8000/api/v1/featured");
+        const data = await response.json();
+        console.log("Featured properties data:", data);
+        setFeaturedProperties(data.results || []);
+        setTotalCount(data.totalCount || 0);
+      } catch (error) {
+        console.error("Home page fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchHomeProperties();
+  }, []);
 
   const handleSearch = async (pageNumber = 1) => {
     setIsLoading(true);
     setCurrentPage(pageNumber);
     setIsSearchMode(true);
     try {
-    const params = new URLSearchParams({
-      query: searchQuery,
-      location: location,
-      min_price: minPrice,
-      max_price: maxPrice,
-      bedrooms: bedrooms,
-      type: propertyType !== "any" ? propertyType : "",
-      page: pageNumber.toString(),
-      limit: itemsPerPage.toString()
-    });
+      const params = new URLSearchParams({
+        query: searchQuery,
+        location: location,
+        min_price: minPrice,
+        max_price: maxPrice,
+        bedrooms: bedrooms,
+        type: propertyType !== "any" ? propertyType : "",
+        page: pageNumber.toString(),
+        limit: itemsPerPage.toString()
+      });
 
-    const response = await fetch(`http://localhost:8000/api/v1/search?${params.toString()}`);
-    if (!response.ok) throw new Error("Failed to fetch");
-    
-    const data = await response.json();
-    
-    // Assuming backend returns { results: [], totalCount: 100 }
-    setFilteredProperties(data.results || []);
-    setTotalCount(data.totalCount || 0); 
-  } catch (error) {
-    console.error("Error fetching properties:", error);
-    setFilteredProperties([]);
-  } finally {
-    setIsLoading(false);
+      const response = await fetch("http://localhost:8000/api/v1/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+          location: location,
+          min_price: minPrice ? parseFloat(minPrice) : null,
+          max_price: maxPrice ? parseFloat(maxPrice) : null,
+          property_type: propertyType !== "any" ? propertyType : null,
+          no_bedrooms: bedrooms && bedrooms !== "0" ? parseInt(bedrooms) : null,
+          // page: pageNumber, // SearchRequest model might not have page/limit yet, check backend model
+          // limit: itemsPerPage
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to fetch");
+
+      const data = await response.json();
+
+      // Assuming backend returns { results: [], totalCount: 100 }
+      setFilteredProperties(data.results || []);
+      setTotalCount(data.totalCount || 0);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      setFilteredProperties([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setSearchQuery("")
+    setLocation("")
+    setBedrooms("")
+    setMinPrice("")
+    setMaxPrice("")
+    setPropertyType("")
+    setIsSearchMode(false)
+    setCurrentPage(1)
   }
-};
-
-const handleReset = () => {
-  setSearchQuery("")
-  setLocation("")
-  setBedrooms("")
-  setMinPrice("")
-  setMaxPrice("")
-  setPropertyType("")
-  setIsSearchMode(false)
-  setCurrentPage(1)
-}
 
   return (
     <div className="min-h-screen bg-background">
@@ -241,7 +258,7 @@ const handleReset = () => {
                     </Select>
                   </div>
 
-                                    {/* Min Price Filter */}
+                  {/* Min Price Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Min Price</label>
                     <Input
@@ -301,19 +318,19 @@ const handleReset = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-2">
-            {isSearchMode && isLoading 
-              ? "Searching..." 
-              : isSearchMode 
-                ? `${totalCount} Search Results` 
-              : isLoading
-                ? "Loading featured properties..."
-                : "Featured Properties"
+            {isSearchMode && isLoading
+              ? "Searching..."
+              : isSearchMode
+                ? `${totalCount} Search Results`
+                : isLoading
+                  ? "Loading featured properties..."
+                  : "Featured Properties"
             }
           </h2>
           <p className="text-muted-foreground">
             {isSearchMode ? "Results based on your search" : "Hand-picked properties for you"}
-            
-          </p>        
+
+          </p>
         </div>
 
         {isLoading ? (
@@ -342,14 +359,23 @@ const handleReset = () => {
                       )}
                       {property.insight && (
                         <TooltipProvider>
-                          <Tooltip>
+                          <Tooltip delayDuration={200}>
                             <TooltipTrigger asChild onClick={(e) => e.preventDefault()}>
-                              <div className="absolute top-4 right-16 bg-primary text-primary-foreground p-2 rounded-full cursor-help">
+                              <div className="absolute top-12 right-4 bg-primary text-primary-foreground p-2 rounded-full cursor-help z-20 shadow-md hover:bg-primary/90 transition-colors">
                                 <Lightbulb className="h-4 w-4" />
                               </div>
                             </TooltipTrigger>
-                            <TooltipContent side="left" className="max-w-xs">
-                              {property.insight}
+                            
+                            <TooltipContent side="left" align="start" className="max-w-[200px] p-3">
+                              {/* Tooltip content with text on the next line */}
+                              <div className="flex flex-col space-y-1">
+                                <span className="font-bold text-[10px] uppercase tracking-wider opacity-70">
+                                  Property Insight
+                                </span>
+                                <p className="text-sm leading-tight font-medium">
+                                  {property.insight}
+                                </p>
+                              </div>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -371,8 +397,7 @@ const handleReset = () => {
                           height="100%"
                           frameBorder="0"
                           style={{ border: 0 }}
-                          src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${property.lat},${property.lng}&z=15&output=embed`}
-                          allowFullScreen
+                          src={`https://www.google.com/maps?q=${property.lat},${property.lng}&output=embed`}                          allowFullScreen
                         />
                       </div>
 
@@ -400,25 +425,25 @@ const handleReset = () => {
               <div className="text-center py-16">
                 <p className="text-xl text-muted-foreground">No properties found matching your search.</p>
                 <Button onClick={handleReset} variant="link" className="mt-2">
-                   Return to Featured Properties
+                  Return to Featured Properties
                 </Button>
               </div>
             )}
 
-{/* Pagination Controls */}
+            {/* Pagination Controls */}
             {/* [ADDED]: Check to hide pagination when viewing Featured properties */}
             {isSearchMode && totalCount > itemsPerPage && (
               <div className="flex justify-center items-center gap-4 mt-12 pb-12">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   disabled={currentPage === 1 || isLoading}
                   onClick={() => handleSearch(currentPage - 1)}
                 >
                   Previous
                 </Button>
                 <span className="text-sm font-medium">Page {currentPage}</span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   disabled={currentPage * itemsPerPage >= totalCount || isLoading}
                   onClick={() => handleSearch(currentPage + 1)}
                 >
