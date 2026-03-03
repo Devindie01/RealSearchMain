@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import json
 from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 
 from dotenv import load_dotenv
 
@@ -111,25 +111,32 @@ Candidate expanded queries:
 {candidate_queries}
 """
 
+
 def run_qna_agent(query: str) -> dict:
-    response = llm.invoke([
-        SystemMessage(content=SYSTEM_PROMPT_QNA),
-        HumanMessage(content=USER_PROMPT_QNA.format(query=query))
-    ])
+    response = llm.invoke(
+        [
+            SystemMessage(content=SYSTEM_PROMPT_QNA),
+            HumanMessage(content=USER_PROMPT_QNA.format(query=query)),
+        ]
+    )
     return json.loads(response.content)
 
- 
+
 def run_reflection_agent(original_query: str, candidate_queries: list) -> dict:
-    response = llm.invoke([
-        SystemMessage(content=SYSTEM_PROMPT_REFLECTION),
-        HumanMessage(
-            content=USER_PROMPT_REFLECTION.format(
-                original_query=original_query,
-                candidate_queries="\n".join(candidate_queries)
-            )
-        )
-    ])
+    response = llm.invoke(
+        [
+            SystemMessage(content=SYSTEM_PROMPT_REFLECTION),
+            HumanMessage(
+                content=USER_PROMPT_REFLECTION.format(
+                    original_query=original_query,
+                    candidate_queries="\n".join(candidate_queries),
+                )
+            ),
+        ]
+    )
     return json.loads(response.content)
+
+
 def expand_and_bound_ambiguous_query(query: str, max_iterations: int = 3):
     iteration = 0
     last_result = None
@@ -145,18 +152,16 @@ def expand_and_bound_ambiguous_query(query: str, max_iterations: int = 3):
         print("\nCandidate Queries:")
         for q in candidate_queries:
             print("-", q)
-            
+
         reflection = run_reflection_agent(query, candidate_queries)
 
         if reflection["approved"]:
             print("\n✅ Reflection Approved")
             return candidate_queries
-        
-      
+
         # Feed reflection feedback back into query
         query = f"{query}. Clarification: {reflection['suggestion']}"
         last_result = candidate_queries
         iteration += 1
-   
-    return  last_result
-    
+
+    return last_result
