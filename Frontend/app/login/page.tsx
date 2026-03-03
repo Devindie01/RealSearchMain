@@ -19,29 +19,62 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+ const [isLoading, setIsLoading] = useState(false) // Add this to your state list
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setIsLoading(true)
 
-    // Basic validation
+    // 1. Validation
     if (!email || !password) {
       setError("Please fill in all fields")
+      setIsLoading(false)
       return
     }
 
-    if (!email.includes("@")) {
-      setError("Please enter a valid email")
-      return
+    // 2. Prepare Form Data for OAuth2
+    // FastAPI expects 'username' and 'password' keys
+    const details = new URLSearchParams()
+    details.append("username", email) 
+    details.append("password", password)
+
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: details.toString(),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+      // 1. Store Token
+      localStorage.setItem("realSearchToken", data.access_token);
+
+      // 2. Store User SAFELY (Use Optional Chaining)
+      if (data.user) {
+        localStorage.setItem("realSearchUser", JSON.stringify({
+          fullName: data.user.full_name, // Map to camelCase for your Header
+          email: data.user.email
+        }));
+        
+        router.push("/"); // Only redirect if data is saved
+        router.refresh();
+      } else {
+        throw new Error("User data missing from server response");
+      }
+    } else {
+      setError(data.detail || "Invalid credentials");
     }
-
-    console.log("[v0] Login attempted with:", { email })
-
-    // For demo purposes, store email in sessionStorage
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("userEmail", email)
+      
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsLoading(false)
     }
-
-    router.push("/sell")
   }
 
   return (
@@ -91,8 +124,15 @@ export default function LoginPage() {
 
               {error && <p className="text-sm text-destructive">{error}</p>}
 
-              <Button type="submit" className="w-full" size="lg">
-                Sign In
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Signing In...
+                  </span>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
 
               <div className="relative my-4">
@@ -103,16 +143,17 @@ export default function LoginPage() {
                   <span className="bg-background px-2 text-muted-foreground">or</span>
                 </div>
               </div>
-
+              <Link href="/signup" className="text-primary hover:underline font-semibold">
               <Button type="button" variant="outline" className="w-full bg-transparent border-primary/20">
                 Sign Up
               </Button>
+              </Link>
             </form>
 
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
                 Don't have an account?{" "}
-                <Link href="/login" className="text-primary hover:underline font-semibold">
+                <Link href="/signup" className="text-primary hover:underline font-semibold">
                   Create one
                 </Link>
               </p>

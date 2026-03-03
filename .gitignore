@@ -19,9 +19,12 @@ dist/
 
 # Data / models
 data/
-models/
 *.h5
 *.pt
 *.ckpt
+
+.next/
+node_modules/
+*.log
 
 .env

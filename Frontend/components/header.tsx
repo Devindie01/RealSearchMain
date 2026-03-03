@@ -42,20 +42,39 @@ export function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userName, setUserName] = useState("")
 
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const userData = localStorage.getItem("realSearchUser")
+  //     if (userData) {
+  //       const user = JSON.parse(userData)
+  //       setIsLoggedIn(true)
+  //       setUserName(user.fullName)
+  //     }
+  //   }
+  // }, [])
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("realSearchUser")
-      if (userData) {
-        const user = JSON.parse(userData)
-        setIsLoggedIn(true)
-        setUserName(user.fullName)
+  const userData = localStorage.getItem("realSearchUser");
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      // Use optional chaining (?.) to prevent crashes
+      if (user && (user.fullName || user.full_name)) {
+        setIsLoggedIn(true);
+        setUserName(user.fullName || user.full_name);
       }
+    } catch (e) {
+      console.error("Failed to parse user data", e);
+      localStorage.removeItem("realSearchUser"); // Clear corrupt data
     }
-  }, [])
+  }
+}, []);
 
   const handleLogout = () => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("realSearchUser")
+      localStorage.removeItem("realSearchUser");
+      localStorage.removeItem("realSearchToken");
+      // localStorage.clear();
       setIsLoggedIn(false)
       setUserName("")
       router.push("/")
@@ -105,45 +124,56 @@ export function Header() {
 
               {/* Buyer Assistance */}
               <NavigationMenuItem>
-                <Link href="/buyer-assistance" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    Buyer Assistance
+                <Link href="/buyer-assistance">
+                  <NavigationMenuLink
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <span>Buyer Assistance</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
 
               {/* Seller Assistance */}
               <NavigationMenuItem>
-                <Link href="/seller-assistance" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    Seller Assistance
+                <Link href="/seller-assistance">
+                  <NavigationMenuLink 
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <span>Seller Assistance</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
 
               {/* List Your Property */}
               <NavigationMenuItem>
-                <Link href="/sell" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    List Your Property
+                <Link href="/sell">
+                  <NavigationMenuLink 
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <span>List Your Property</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
 
               {/* Market Insights */}
               <NavigationMenuItem>
-                <Link href="/market-insights" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    Market Insights
+                <Link href="/market-insights">
+                  <NavigationMenuLink 
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <span>Market Insights</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
 
               {/* Contact Us */}
               <NavigationMenuItem>
-                <Link href="/contact" legacyBehavior passHref>
-                  <NavigationMenuLink className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
-                    Contact Us
+                <Link href="/contact">
+                  <NavigationMenuLink 
+                    asChild
+                    className="inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/10 focus:bg-primary-foreground/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <span>Contact Us</span>
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>

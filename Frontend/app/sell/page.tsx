@@ -13,6 +13,7 @@ import { CheckCircle2, MapPin } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
+import { AuthGuard } from "@/components/auth-guard" // 1. Import the Guard
 
 export default function SellPropertyPage() {
   const router = useRouter()
@@ -31,16 +32,65 @@ export default function SellPropertyPage() {
     lng: "",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log("[v0] Property submission:", formData)
+    const token = localStorage.getItem("realSearchToken")
+    if (!token) {
+      alert("Your session has expired. Please log in again.")
+      window.location.href = "/login"
+      return
+    }
 
-    setSubmitted(true)
+    // 1. Map your form state to the Backend Schema
+    const payload = {
+      property: {
+        title: formData.title,
+        description: formData.description,
+        property_type: formData.type, // Mapping 'type' to 'property_type'
+        contract_type: "Sale",        // Adding default as required by your schema
+        price_lkr: Number(formData.price),
+        location: formData.location,
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        land_size_sqm: Number(formData.sqft), // Assuming sqft maps here
+        amenities: [] 
+      },
+      owner: {
+        owner_name: "Current User", // You can update this to real user data later
+        owner_contact: "Contact via platform"
+      }
+    }
 
-    setTimeout(() => {
-      router.push("/")
-    }, 2000)
+    try {
+      // 2. Get the token from storage
+      const token = localStorage.getItem("realSearchToken") 
+
+      // 3. Send to Backend
+      const response = await fetch("http://localhost:8000/api/v1/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log("Success:", result)
+        setSubmitted(true)
+        setTimeout(() => {
+          router.push("/")
+        }, 2000)
+      } else {
+        const errorData = await response.json()
+        alert(`Error: ${errorData.detail || "Failed to upload property"}`)
+      }
+    } catch (error) {
+      console.error("Connection error:", error)
+      alert("Could not connect to the backend server.")
+    }
   }
 
   const handleChange = (field: string, value: string) => {
@@ -83,6 +133,7 @@ export default function SellPropertyPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       <Header />
 
@@ -250,7 +301,7 @@ export default function SellPropertyPage() {
                     className="w-full bg-transparent"
                   >
                     <MapPin className="h-4 w-4 mr-2" />
-                    Use Current Location
+                    Choose Location
                   </Button>
 
                   {formData.lat && formData.lng && (
@@ -301,5 +352,6 @@ export default function SellPropertyPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   )
 }
