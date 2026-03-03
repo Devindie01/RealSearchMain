@@ -1,7 +1,8 @@
 "use client"
-
+import { useState, useEffect } from "react"
 import { TrendingUp, TrendingDown, Home, MapPin } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Header } from "@/components/header"
 import {
   LineChart,
   Line,
@@ -64,7 +65,18 @@ const marketTrends = [
 ]
 
 export default function MarketInsights() {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  // If not mounted, return a placeholder or the skeleton to avoid mismatch
+  if (!isMounted) return <div className="h-80 w-full bg-muted animate-pulse" />
+
   return (
+    <div className="min-h-screen bg-background">
+          <Header />
     <main className="min-h-screen bg-background">
       {/* Header */}
       <section className="bg-primary text-primary-foreground py-16">
@@ -108,7 +120,7 @@ export default function MarketInsights() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `LKR ${(value / 1000000).toFixed(1)}M`} />
+                  <Tooltip formatter={(value: any) => {const formattedValue = `LKR ${(Number(value) / 1000000).toFixed(1)}M`;return [formattedValue, "Price"] as any;}} />
                   <Legend />
                   <Line type="monotone" dataKey="houses" stroke="#1a5f3f" name="Houses" strokeWidth={2} />
                   <Line type="monotone" dataKey="apartments" stroke="#2d8659" name="Apartments" strokeWidth={2} />
@@ -198,5 +210,6 @@ export default function MarketInsights() {
         </div>
       </section>
     </main>
+    </div>
   )
 }

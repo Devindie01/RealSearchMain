@@ -50,6 +50,20 @@ async def get_featured_properties():
       "lat": 6.9271,
       "lng": 79.8612,
       "insight": "Prime business district location with high rental yields"
+    },
+    {
+      "id": 3,
+      "title": "Safe Family Home",
+      "location": "Panadura, Sri Lanka",
+      "price": 52000000,
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "sqft": 1200,
+      "image": "/modern-loft-interior.jpg",
+      "type": "Apartment",
+      "lat": 6.9271,
+      "lng": 79.8612,
+      "insight": "Prime business district location with high rental yields"
     }
     ]
     # print (properties)

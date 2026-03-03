@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Header } from "@/components/header"
 
 const sellerAssistanceContent = [
   {
@@ -37,6 +38,10 @@ export default function SellerAssistance() {
   }
 
   return (
+    <div className="min-h-screen bg-background">
+      {/* 2. ADD THE HEADER HERE */}
+      <Header />
+
     <main className="min-h-screen bg-background">
       {/* Header */}
       <section className="bg-primary text-primary-foreground py-16">
@@ -100,5 +105,6 @@ export default function SellerAssistance() {
         </div>
       </section>
     </main>
+    </div>
   )
 }
