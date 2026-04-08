@@ -18,7 +18,7 @@ INDEX_NAME      = "realsearch"
 
 # Use the exact field name that stores your property ID in Elasticsearch.
 # Change this if your uploaded CSV created a different field name, e.g. "Property ID"
-RETURN_FIELD    = "propertyId"
+RETURN_FIELD    = "Property_id"
 
 TOP_K           = 15
 INPUT_FILE = "../queries/raw_queries.xlsx"
