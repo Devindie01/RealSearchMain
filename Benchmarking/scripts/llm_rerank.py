@@ -7,18 +7,26 @@ import time
 # ----------------------------
 # CONFIG
 # ----------------------------
-genai.configure(api_key="YOUR_API_KEY")
+genai.configure(api_key="AIzaSyDnhuN3U-1MhFmzOB0dQYmHICGLqLQcJsw")
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-BASE_DIR = Path("../outputs/global_pool")
+BASE_DIR = Path("../outputs/ground_truth")
+BASE_DIR.mkdir(parents=True, exist_ok=True)
 
-QUERIES_FILE = BASE_DIR / "queries.csv"
-POOL_FILE = BASE_DIR / "global_pool_dedup.csv"
-PROPERTY_FILE = "../data/properties.csv"   # adjust if needed
-
-OUTPUT_FILE = BASE_DIR / "ground_truth.csv"
+QUERIES_FILE = "../queries/raw_queries.csv"
+POOL_FILE =  "../outputs/global_pool/global_pool_dedup.csv"
+PROPERTY_FILE = "../queries/fully_standardized_properties.csv"
 
 TOP_K = 10
+
+# ----------------------------
+# BATCH CONTROL (NEW)
+# ----------------------------
+START_QUERY = 31     # inclusive (1-based index)
+END_QUERY = 40      # inclusive
+BATCH_SIZE = 10
+
+OUTPUT_FILE = BASE_DIR / f"ground_truth_{START_QUERY}_{END_QUERY}.csv"
 
 # ----------------------------
 # Load data
@@ -40,7 +48,7 @@ def build_property_text(pid):
     if not prop:
         return ""
 
-    desc = str(prop.get("Full Description", ""))[:1000]  # truncate for safety
+    desc = str(prop.get("Full Description", ""))[:1000]
 
     return f"""
 ID: {pid}
@@ -81,44 +89,66 @@ Example:
 """
 
 # ----------------------------
-# Main loop
+# Retry logic
+# ----------------------------
+def call_model_with_retry(prompt, retries=3, delay=5):
+    for attempt in range(retries):
+        try:
+            response = model.generate_content(prompt)
+            text = response.text.strip()
+            text = text.replace("```json", "").replace("```", "").strip()
+            return json.loads(text)
+
+        except Exception as e:
+            print(f"⚠️ Attempt {attempt+1} failed:", e)
+
+            if attempt < retries - 1:
+                time.sleep(delay)
+            else:
+                return []
+
+# ----------------------------
+# Main loop (UPDATED)
 # ----------------------------
 results = []
 
-for idx in range(len(queries_df)):
-    query_id = queries_df.iloc[idx]["query_id"]
-    query = queries_df.iloc[idx]["query"]
+start_idx = START_QUERY - 1
+end_idx = min(END_QUERY, len(queries_df))
 
-    property_ids = json.loads(pool_df.iloc[idx]["property_ids"])
+for batch_start in range(start_idx, end_idx, BATCH_SIZE):
+    batch_end = min(batch_start + BATCH_SIZE, end_idx)
 
-    # optional safety limit (recommended)
-    property_ids = property_ids[:20]
+    print(f"\n🚀 Processing queries {batch_start+1} to {batch_end}")
 
-    prompt = build_prompt(query, property_ids)
+    for idx in range(batch_start, batch_end):
+        query_id = queries_df.iloc[idx]["query_id"]
+        query = queries_df.iloc[idx]["query"]
 
-    try:
-        response = model.generate_content(prompt)
-        text = response.text.strip()
+        property_ids = json.loads(pool_df.iloc[idx]["property_ids"])
+        property_ids = property_ids[:20]
 
-        text = text.replace("```json", "").replace("```", "").strip()
-        top_ids = json.loads(text)
+        prompt = build_prompt(query, property_ids)
 
-    except Exception as e:
-        print(f"Error at query {query_id}:", e)
-        top_ids = []
+        try:
+            top_ids = call_model_with_retry(prompt)
+        except Exception as e:
+            print(f"Error at query {query_id}:", e)
+            top_ids = []
 
-    results.append({
-        "query_id": query_id,
-        "top_10_property_ids": top_ids
-    })
+        results.append({
+            "query_id": query_id,
+            "top_10_property_ids": top_ids
+        })
 
-    print(f"✅ Done query {query_id}")
+        print(f"✅ Done query {query_id}")
+        time.sleep(1)
 
-    time.sleep(1)
+    print(f"✅ Finished batch {batch_start+1}-{batch_end}")
+    time.sleep(5)
 
 # ----------------------------
 # Save output
 # ----------------------------
 pd.DataFrame(results).to_csv(OUTPUT_FILE, index=False)
 
-print("🎉 Ground truth generation complete!")
+print(f"🎉 Ground truth generation complete! Saved to {OUTPUT_FILE}")
