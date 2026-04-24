@@ -1,14 +1,18 @@
 import pandas as pd
 import json
-import google.generativeai as genai
+from openai import OpenAI
 from pathlib import Path
 import time
 
 # ----------------------------
 # CONFIG
 # ----------------------------
-genai.configure(api_key="AIzaSyDnhuN3U-1MhFmzOB0dQYmHICGLqLQcJsw")
-model = genai.GenerativeModel("gemini-2.5-flash")
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key="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",  # ← replace with your OpenRouter API key
+)
+
+MODEL = "google/gemini-2.5-flash"
 
 BASE_DIR = Path("../outputs/ground_truth")
 BASE_DIR.mkdir(parents=True, exist_ok=True)
@@ -20,11 +24,11 @@ PROPERTY_FILE = "../queries/fully_standardized_properties.csv"
 TOP_K = 10
 
 # ----------------------------
-# BATCH CONTROL (NEW)
+# BATCH CONTROL
 # ----------------------------
-START_QUERY = 31     # inclusive (1-based index)
-END_QUERY = 40      # inclusive
-BATCH_SIZE = 10
+START_QUERY = 101     # inclusive (1-based index)
+END_QUERY = 207    # inclusive
+BATCH_SIZE = 108
 
 OUTPUT_FILE = BASE_DIR / f"ground_truth_{START_QUERY}_{END_QUERY}.csv"
 
@@ -62,30 +66,34 @@ def build_prompt(query, property_ids):
     properties_text = "\n\n".join(
         [build_property_text(pid) for pid in property_ids]
     )
-
+    print(f"🔍 Building prompt for query: '{query}' with {len(property_ids)} properties")
+    print(f"📄 Sample property text:\n{properties_text[:500]}...")  # Print a sample of the properties text
     return f"""
 You are a real estate search ranking system.
-
+ 
 User Query:
 {query}
-
+ 
 Properties:
 {properties_text}
-
+ 
 Task:
 Select the TOP {TOP_K} most relevant properties.
-
+ 
 Rules:
 - Focus on matching user intent precisely
-- Ignore irrelevant properties
 - Prefer better matches even if wording differs
-
+- You MUST always return EXACTLY {TOP_K} property IDs — no more, no less
+- If there are not enough perfect matches, rank the remaining properties by best partial match and include them anyway
+- Never return fewer than {TOP_K} results
+ 
 Return EXACTLY {TOP_K} property IDs in ranked order.
-
-Output ONLY JSON array.
-
+ 
+Output ONLY a JSON array with exactly {TOP_K} integers. No explanation.
+ 
 Example:
-[101, 55, 23]
+when top k = 10
+[101, 55, 23 , ... up to 10 IDs ...]
 """
 
 # ----------------------------
@@ -93,9 +101,15 @@ Example:
 # ----------------------------
 def call_model_with_retry(prompt, retries=3, delay=5):
     for attempt in range(retries):
+        print(f"🤖 Calling model (Attempt {attempt+1}/{retries})...")
         try:
-            response = model.generate_content(prompt)
-            text = response.text.strip()
+            response = client.chat.completions.create(
+                model=MODEL,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+            )
+            text = response.choices[0].message.content.strip()
             text = text.replace("```json", "").replace("```", "").strip()
             return json.loads(text)
 
@@ -108,7 +122,7 @@ def call_model_with_retry(prompt, retries=3, delay=5):
                 return []
 
 # ----------------------------
-# Main loop (UPDATED)
+# Main loop
 # ----------------------------
 results = []
 
