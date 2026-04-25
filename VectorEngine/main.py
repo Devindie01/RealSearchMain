@@ -1,103 +1,24 @@
-import json
-from app.query.executor.query_executor import chain, QueryEmbedder
-from app.query.formatter import (
-    create_weaviate_filter,
-    execute_search,
-    execute_weighted_search,
-)
-from app.query import query_expander
 from app.storage.connections import get_client
-from app.storage.operations import search_real_search_collection_with_filters
+from tests.pipeline import run_pipeline_test
 
+queries = [
+    "Buy a House in Colombo",
+    "Hello everyone! I’m looking for a house to buy or land with electricity and water already connected. 📍 Preferred location: Habaraduwa area ➡️ I will also consider properties from Talpe to Ahangama Requirements: • 4–5 bedrooms • 4–5 bathrooms • Maximum 2.5 km from the beach • Clear legal status – I will verify the Title Report with my lawyer.",
+    "Looking for a 3+ bedroom villa for long term lease. In Thalpe",
+    # "Hi, Im looking for a house to rent in Hiriketya from 1.11.25-1.12.25. I would like a house with a good kitchen, an outside place to sit and a workingplace.",
+    # "Looking for a House for Rent 2 Bedrooms Kitchen Living Room Washroom Parking Preferred Areas: Moratuwa, Panadura, Piliyandala 💰 Budget: Rs. 30,000 – 40,000/-",
+    # "We are looking for a house to rent in Ahangama starting from 21 February for a duration of 2–3 months. The house should have 3 bedrooms and 2 bathrooms, along with a fully equipped kitchen. Air conditioning is required in all bedrooms, and the property should include a living room with a sofa. Ideally, it should also have a small garden and a terrace space. Our budget is up to 350,000 LKR per month. We are a quiet family and will take good care of the house.",
+    # "We are looking for a 3+ bedroom boutique villa for a long-term lease. The preferred location is between Galle Fort and Thalpe. The property should be suitable for long-term living and offer a comfortable and private environment.",
+    # "I am looking for a house to rent in Hiriketiya from 1 November 2025 to 1 December 2025. The house should include a good kitchen, an outdoor seating area, and a workspace suitable for working remotely.",
+    # "I am looking for a house for rent with 2 bedrooms, a kitchen, living room, washroom, and parking space. Preferred locations are Moratuwa, Panadura, or Piliyandala. My budget is between Rs. 30,000 and 40,000 per month.",
+    # "land for sale in Colombo with good access to public transport",
+    # "villa in Galle with pool and sea view for sale",
+    # "affordable house in Kandy with 3 bedrooms and garden for rent",
+]
 
-def main():
-    print("--- Property Search Pipeline Test ---")
-    user_input = input("Enter your search query: ")   # this comes from the frontend
-
-    try:
-        # Query expansion
-        print("\nExpanding the query...")
-        new_query = query_expander.get_query_expansion(user_input)
-        expaned_query = new_query["expanded_query"]
-
-        print(f"Expanded Query: {expaned_query}")
-
-        # Get weights
-        print("\nExtracted Weights:")
-        weights = new_query["scaled_weights"]
-        print(json.dumps(weights, indent=4))
-
-        # 1. Extract structured data using the LLM chain
-        print("\n[1/3] Extracting structured data...")
-        result_segment = chain.invoke({"input": expaned_query})
-
-        # 2. Generate vector embedding for the description
-        print("[2/3] Generating vector embedding...")
-        embedder = QueryEmbedder()
-        query_vector = embedder.get_vector(result_segment.description)
-
-        # 3. Format the Weaviate filters
-        print("[3/3] Formatting Weaviate parameters...")
-        wv_filter = create_weaviate_filter(result_segment)
-
-        # Print the Final Payload Ready for Weaviate
-        print("\n" + "=" * 50)
-        print("READY FOR WEAVIATE HYBRID SEARCH")
-        print("=" * 50)
-
-        # Print Keyword portion
-        print(f"User's Query: '{user_input}'")
-
-        print(f"Expanded Query: '{expaned_query}'")
-
-        # Print Vector portion (showing first 5 dims for brevity)
-        vector_preview = query_vector[:5] if query_vector else []
-        print(f"Vector (Dim: {len(query_vector)}): {vector_preview}...")
-
-        # Print Filter portion
-        # Note: Weaviate Filter objects have a specific internal structure
-        print(f"Applied Filters: {wv_filter if wv_filter else 'None'}")
-
-        print("\nFull Extracted Object (JSON):")
-        print(json.dumps(result_segment.model_dump(), indent=4))
-
-        # 4. Execute the search
-        print("\n[4/4] Executing search on Weaviate...")
-        results = search_real_search_collection_with_filters(
-            expaned_query, wv_filter, limit=10
-        )
-        # with get_client() as client:
-        #     # results = execute_weighted_search(
-        #     #     expaned_query, query_vector, weights, client
-        #     # )
-        #     results = execute_search(user_input, query_vector, result_segment, client)
-
-        # Print results                  # send results to the front end
-
-        print("\n" + "=" * 50)
-        print("SEARCH RESULTS")
-        print("=" * 50)
-
-        if results:
-            for i, obj in enumerate(results, 1):
-                props = obj
-
-                print(f"\nResult {i}:")
-                print(f"  Title: {props.get('title')}")
-                print(f"  Location: {props.get('location', props.get('nearestTown'))}")
-                print(f"  Price (LKR): {props.get('priceLkr')}")
-                print(f"  Bedrooms: {props.get('bedrooms')}")
-                print(f"  Bathrooms: {props.get('bathrooms')}")
-                print(f"  Property Type: {props.get('propertyType')}")
-        else:
-            print("No results found.")
-
-        print("=" * 50)
-
-    except Exception as e:
-
-        print(f"ERROR in pipeline: {e}")
-
-
-if __name__ == "__main__":
-    main()
+with get_client() as client:
+    for q in queries:
+        try:
+            run_pipeline_test(q, client)
+        except Exception as e:
+            print(f"Error processing '{q}': {e}")
