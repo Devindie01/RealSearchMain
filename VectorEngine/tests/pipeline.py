@@ -6,9 +6,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from traning_data_generation.feature_score_generation import build_features
 from app.query.query_expanision.query_normalizer import clean_query
 from app.query.query_expanision.post_processing import build_query_segments
 from app.query.query_expanision.classifer import (
+    extract_entities_from_user_query,
     queryclassifier,
 )
 from app.query.query_expanision.semantic_query_handler import get_alpha_from_entities
@@ -25,17 +27,25 @@ def run_pipeline_test(user_query, client):
     user_query = clean_query(user_query)
 
     # Step A: NLP Classification
-    classification = queryclassifier(user_query)
-    alpha = get_alpha_from_entities(classification)
 
-    print(f"Type: {classification['type']} | Alpha: {alpha}")
+    # --- Find this section in run_pipeline_test ---
+
+    res = extract_entities_from_user_query(user_query)
+    entities = res["entities"]
+    print(f"Extracted Entities: {entities}")
+    
+    features = build_features(user_query, entities)
+    print(f"Extracted Features: {features}")
+    
+    alpha = compute_alpha(features)
+    print(f"Computed Alpha: {alpha}")
+    
+    type_label = queryclassifier(features)
+    classification = {"type": type_label} 
+
+    print(f"Type: {classification['type']} | Alpha: {alpha:.3f}")
 
     if classification["type"] == "Semantic":
-
-        entities = classification["entities"]
-
-        print(f"Extracted Entities: {entities}")
-        print(f"User Query: '{user_query}'")
 
         result_segment = build_query_segments(user_query, entities)
 
@@ -91,3 +101,29 @@ def run_pipeline_test(user_query, client):
 
     else:
         print("Non-semantic query detected. Skipping LLM extraction and vectorization.")
+
+
+
+def compute_alpha(features):
+    slot_coverage, slot_conf, non_slot_ratio, num_loc, num_prop = features
+
+    # normalize counts
+    num_loc = min(num_loc / 3, 1.0)
+    num_prop = min(num_prop / 3, 1.0)
+
+    # weighted combination
+    alpha = (
+        + 0.4 * non_slot_ratio         # more natural language → semantic
+        + 0.2 * num_loc                # ambiguity → semantic
+        + 0.1 * num_prop               # ambiguity → semantic
+        - 0.3 * slot_coverage          # structured → keyword
+        - 0.3 * slot_conf              # reliable structure → keyword
+    )
+
+    # shift to center around 0.5
+    alpha = 0.5 + alpha
+
+    # clamp
+    alpha = max(0.1, min(0.9, alpha))
+
+    return alpha

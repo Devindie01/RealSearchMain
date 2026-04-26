@@ -18,7 +18,7 @@ JUNK_WORDS = ["in", "at", "near", "with", "for", "the", "and", "of"]
 def extract_entities_from_user_query(user_query):
     doc = nlp(user_query)
 
-    # ✅ Step 1: Collect multiple values per slot
+    # ✅ Step 1: Collect multiple values per slotError processing query
     raw_entities = defaultdict(list)
 
     for ent in doc.ents:
@@ -83,16 +83,29 @@ def extract_entities_from_user_query(user_query):
         "raw_entities": raw_entities  # optional debug
     }
 
+def queryclassifier(features):
+    slot_coverage, slot_conf, non_slot_ratio, num_loc, num_prop = features
 
-def queryclassifier(user_query):
-    res = extract_entities_from_user_query(user_query)
-    entities = res["entities"]
+    # semantic conditions
+    if (
+        non_slot_ratio > 0.5 or
+        num_loc > 1 or
+        num_prop > 1
+    ):
+        return "Semantic"
 
-    if len(entities) == 0:
-        res["type"] = "Ambiguous"
-    else:
-        res["type"] = "Semantic"
-    return res
+    # otherwise ambiguous
+    return "Ambiguous"
+
+# def queryclassifier(user_query):
+#     res = extract_entities_from_user_query(user_query)
+#     entities = res["entities"]
+
+#     if len(entities) == 0:
+#         res["type"] = "Ambiguous"
+#     else:
+#         res["type"] = "Semantic"
+#     return res
 
 
 # def map_entities_to_query_segment(
