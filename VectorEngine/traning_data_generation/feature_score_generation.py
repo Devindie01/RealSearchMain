@@ -1,8 +1,3 @@
-
-
-#function to calculateslot coverage ratio = (number of slots with at least 1 value) / (total number of slots)
-#total slots = 7 (property_type, contract_type, location, no_of_bedrooms, no_of_bathrooms, price, land_size)
-
 TOTAL_SLOTS = [
     "property_type",
     "contract_type",
@@ -14,18 +9,28 @@ TOTAL_SLOTS = [
 ]
 
 
+def _has_value(val) -> bool:
+    """Return True if a slot value is non-empty, regardless of type."""
+    if val is None:
+        return False
+    if isinstance(val, (list, str)):
+        return len(val) > 0
+    return True  # int, float, etc. — presence itself counts
+
+
+def _as_list(val) -> list:
+    """Coerce any slot value to a list for uniform iteration."""
+    if val is None:
+        return []
+    if isinstance(val, list):
+        return val
+    return [val]  # wrap scalar (int, str) in a list
+
+
 def calculate_slot_coverage(raw_entities: dict) -> float:
-    filled = 0
-
-    for slot in TOTAL_SLOTS:
-        if slot in raw_entities and len(raw_entities[slot]) > 0:
-            filled += 1
-
+    filled = sum(1 for slot in TOTAL_SLOTS if _has_value(raw_entities.get(slot)))
     return filled / len(TOTAL_SLOTS)
 
-
-#function to calculate slot confidence score = avg(confidence of all slot that have at least 1 value)
-#confidence scores for each slot (SLOT_F1 = {"property_type": 0.9521,"contract_type": 0.9463,"location": 0.9313,"no_of_bedrooms": 0.9630,"price": 0.8898,"land_size": 0.9346,"no_of_bathrooms": 0.9787,})
 
 SLOT_F1 = {
     "property_type": 0.9521,
@@ -38,60 +43,45 @@ SLOT_F1 = {
 }
 
 def calculate_slot_confidence(raw_entities: dict) -> float:
-    scores = []
+    scores = [
+        SLOT_F1[slot]
+        for slot, val in raw_entities.items()
+        if slot in SLOT_F1 and _has_value(val)
+    ]
+    return sum(scores) / len(scores) if scores else 0.0
 
-    for slot, values in raw_entities.items():
-        if slot in SLOT_F1 and len(values) > 0:
-            scores.append(SLOT_F1[slot])
-
-    if not scores:
-        return 0.0
-
-    return sum(scores) / len(scores)
-
-
-#function to calculate non_slot_ratio = (number of tokens not part of any slot) / (total number of tokens in the query)
 
 import spacy
-
 nlp = spacy.load("en_core_web_sm")
 
 
 def calculate_non_slot_ratio(query: str, raw_entities: dict) -> float:
     doc = nlp(query)
-
     total_tokens = len([t for t in doc if not t.is_punct])
 
     slot_tokens = set()
-
-    for values in raw_entities.values():
-        for v in values:
-            for token in v.split():
+    for val in raw_entities.values():
+        for v in _as_list(val):
+            for token in str(v).split():
                 slot_tokens.add(token.lower())
 
-    non_slot_tokens = 0
+    non_slot_tokens = sum(
+        1 for token in doc
+        if not token.is_punct and token.text.lower() not in slot_tokens
+    )
 
-    for token in doc:
-        if not token.is_punct and token.text.lower() not in slot_tokens:
-            non_slot_tokens += 1
+    return non_slot_tokens / total_tokens if total_tokens > 0 else 0.0
 
-    if total_tokens == 0:
-        return 0.0
-
-    return non_slot_tokens / total_tokens
-
-
-#functions to calcualte penalty for having multiple values for a single slot (e.g. "location: Colombo, Kandy" or "property_type: house or apartment")
-# num_locations and num_property_types. if entity list has several values which has location tag or property_type tag, we apply a penalty to the final score. The penalty can be calculated as 0.1 for each additional value beyond the first one. For example, if there are 3 locations mentioned, the penalty would be 0.2 (0.1 for the second location and 0.1 for the third location). This encourages the model to prefer queries that are more specific and have fewer values for each slot.
 
 def num_locations(raw_entities: dict) -> int:
-    return len(raw_entities.get("location", []))
+    return len(_as_list(raw_entities.get("location", [])))
+
 
 def num_property_types(entities: dict) -> int:
-    return len(entities.get("property_type", []))
+    return len(_as_list(entities.get("property_type", [])))
+
 
 def build_features(query: str, entities: dict):
-
     return [
         calculate_slot_coverage(entities),
         calculate_slot_confidence(entities),

@@ -10,8 +10,10 @@ from app.query.query_object import QuerySegment
 
 
 # Load your model
-nlp = spacy.load(r"D:\FYP\RealSearch\VectorEngine\models\model-best")
-
+# nlp = spacy.load(r"D:\FYP\RealSearch\VectorEngine\models\model-best")
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+nlp = spacy.load(os.path.join(BASE_DIR, "models", "model-best"))
 JUNK_WORDS = ["in", "at", "near", "with", "for", "the", "and", "of"]
 
 

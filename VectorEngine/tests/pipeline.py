@@ -1,8 +1,6 @@
 import sys
 from pathlib import Path
 
-# Ensure the project root (VectorEngine) is on sys.path so the `app` package
-# can be imported when running this test directly (e.g. `python tests/...`).
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -21,109 +19,123 @@ from app.query.formatter import create_weaviate_filter
 from app.query.executor.query_executor import QueryEmbedder
 
 
+def _to_int(val):
+    """Safely convert a property ID to int for consistent comparison."""
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return val
+
+
 def run_pipeline_test(user_query, client):
     print(f"\n{'='*60}\nQUERY: {user_query}")
 
     user_query = clean_query(user_query)
 
-    # Step A: NLP Classification
-
-    # --- Find this section in run_pipeline_test ---
-
     res = extract_entities_from_user_query(user_query)
     entities = res["entities"]
     print(f"Extracted Entities: {entities}")
-    
-    features = build_features(user_query, entities)
+
+    features = build_features(user_query, entities)  # ✅ no fallback — real errors will surface
     print(f"Extracted Features: {features}")
-    
+
     alpha = compute_alpha(features)
     print(f"Computed Alpha: {alpha}")
-    
+
     type_label = queryclassifier(features)
-    classification = {"type": type_label} 
+    classification = {"type": type_label}
 
     print(f"Type: {classification['type']} | Alpha: {alpha:.3f}")
 
     if classification["type"] == "Semantic":
 
-        result_segment = build_query_segments(user_query, entities)
+        try:
+            result_segment = build_query_segments(user_query, entities)
+            print(f"Query Segment: {result_segment}")
+            wv_filter = create_weaviate_filter(result_segment)
+        except Exception as e:
+            print(f"  ⚠️ Segment/filter error (skipping filter): {e}")
+            wv_filter = None
 
-        print (f"Query Segment: {result_segment}")
-
-        # Step C: Vectorization
         embedder = QueryEmbedder()
         query_vector = embedder.get_vector(user_query)
 
-        # Step D: Filter Construction
-        wv_filter = create_weaviate_filter(result_segment)
-
-        # Step E: Weaviate Hybrid Search
         properties = client.collections.get("RealSearchPropData")
 
         results = properties.query.hybrid(
-            query=user_query,  # Keyword part
-            vector=query_vector,  # Vector part
-            # filters=wv_filter,  # Hard metadata filters
-            alpha=alpha,  # Dynamically calculated weight
+            query=user_query,
+            vector=query_vector,
+            # filters=wv_filter,
+            alpha=alpha,
             limit=10,
         )
-        # Print Results
+
+        retrieved_ids = []
         if results.objects:
             for i, obj in enumerate(results.objects, 1):
                 p = obj.properties
+                pid = _to_int(p.get("propertyId"))
+                retrieved_ids.append(pid)
                 print(f" [{i}] {p.get('title')})")
         else:
             print(" No results found.")
 
+        return retrieved_ids
+
     elif classification["type"] == "Ambiguous":
         predicted_queries = expand_and_bound_ambiguous_query(user_query)
         print(f"Predicted Queries: {predicted_queries}")
-        all_properties = []
+
+        seen = set()
+        retrieved_ids = []
+
         for i, pq in enumerate(predicted_queries, 1):
-            embedder = QueryEmbedder()
-            query_vector = embedder.get_vector(pq)
-            properties = client.collections.get("RealSearchPropData")
+            try:
+                embedder = QueryEmbedder()
+                query_vector = embedder.get_vector(pq)
+                properties = client.collections.get("RealSearchPropData")
 
-            results = properties.query.hybrid(
-                query=user_query,  # Keyword part
-                vector=query_vector,  # Vector part
-                alpha=1,  # Dynamically calculated weight
-                limit=10,
-            )
-            all_properties.append(results.objects)
+                results = properties.query.hybrid(
+                    query=user_query,
+                    vector=query_vector,
+                    alpha=1,
+                    limit=10,
+                )
 
-        if all_properties:
-            for i, obj_list in enumerate(all_properties, 1):
-                for j, obj in enumerate(obj_list, 1):
-                    p = obj.properties
-                    print(f" [{i}.{j}] {p.get('title')}")
+                if results.objects:
+                    for j, obj in enumerate(results.objects, 1):
+                        p = obj.properties
+                        pid = _to_int(p.get("propertyId"))
+                        print(f" [{i}.{j}] {p.get('title')}")
+                        if pid not in seen:
+                            seen.add(pid)
+                            retrieved_ids.append(pid)
+            except Exception as e:
+                print(f"  ⚠️ Error on expanded query {i}: {e}")
+                continue
+
+        return retrieved_ids[:10]
 
     else:
-        print("Non-semantic query detected. Skipping LLM extraction and vectorization.")
-
+        print("Non-semantic query detected. Skipping.")
+        return []
 
 
 def compute_alpha(features):
     slot_coverage, slot_conf, non_slot_ratio, num_loc, num_prop = features
 
-    # normalize counts
     num_loc = min(num_loc / 3, 1.0)
     num_prop = min(num_prop / 3, 1.0)
 
-    # weighted combination
     alpha = (
-        + 0.4 * non_slot_ratio         # more natural language → semantic
-        + 0.2 * num_loc                # ambiguity → semantic
-        + 0.1 * num_prop               # ambiguity → semantic
-        - 0.3 * slot_coverage          # structured → keyword
-        - 0.3 * slot_conf              # reliable structure → keyword
+        + 0.4 * non_slot_ratio
+        + 0.2 * num_loc
+        + 0.1 * num_prop
+        - 0.3 * slot_coverage
+        - 0.3 * slot_conf
     )
 
-    # shift to center around 0.5
     alpha = 0.5 + alpha
-
-    # clamp
     alpha = max(0.1, min(0.9, alpha))
 
     return alpha
