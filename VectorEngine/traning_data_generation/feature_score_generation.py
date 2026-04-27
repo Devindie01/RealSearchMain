@@ -5,7 +5,7 @@ TOTAL_SLOTS = [
     "no_of_bedrooms",
     "no_of_bathrooms",
     "price",
-    "land_size"
+    "land_size",
 ]
 
 
@@ -39,8 +39,9 @@ SLOT_F1 = {
     "no_of_bedrooms": 0.9630,
     "price": 0.8898,
     "land_size": 0.9346,
-    "no_of_bathrooms": 0.9787
+    "no_of_bathrooms": 0.9787,
 }
+
 
 def calculate_slot_confidence(raw_entities: dict) -> float:
     scores = [
@@ -52,25 +53,41 @@ def calculate_slot_confidence(raw_entities: dict) -> float:
 
 
 import spacy
+
 nlp = spacy.load("en_core_web_sm")
+
+
+def _has_value(val) -> bool:
+    if val is None:
+        return False
+    if isinstance(val, list):
+        return len(val) > 0
+    if isinstance(val, str):
+        return len(val.strip()) > 0
+    return True
 
 
 def calculate_non_slot_ratio(query: str, raw_entities: dict) -> float:
     doc = nlp(query)
     total_tokens = len([t for t in doc if not t.is_punct])
+    if total_tokens == 0:
+        return 0.0
 
     slot_tokens = set()
-    for val in raw_entities.values():
-        for v in _as_list(val):
-            for token in str(v).split():
-                slot_tokens.add(token.lower())
+    for key, val in raw_entities.items():
+        # Ensure we iterate through lists (like locations) and single values correctly
+        items = val if isinstance(val, list) else [val]
+        for item in items:
+            if item:
+                for word in str(item).split():
+                    slot_tokens.add(word.lower())
 
     non_slot_tokens = sum(
-        1 for token in doc
+        1
+        for token in doc
         if not token.is_punct and token.text.lower() not in slot_tokens
     )
-
-    return non_slot_tokens / total_tokens if total_tokens > 0 else 0.0
+    return non_slot_tokens / total_tokens
 
 
 def num_locations(raw_entities: dict) -> int:
@@ -87,5 +104,5 @@ def build_features(query: str, entities: dict):
         calculate_slot_confidence(entities),
         calculate_non_slot_ratio(query, entities),
         num_locations(entities),
-        num_property_types(entities)
+        num_property_types(entities),
     ]

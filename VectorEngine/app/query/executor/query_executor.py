@@ -10,7 +10,7 @@ load_dotenv()
 
 
 class QueryEmbedder:
-    def __init__(self, model_name="BAAI/bge-large-en-v1.5"):
+    def __init__(self, model_name="Snowflake/snowflake-arctic-embed-l-v2.0"):
         self.model = SentenceTransformer(model_name)
 
     def get_vector(self, text: str):

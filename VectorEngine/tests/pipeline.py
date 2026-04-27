@@ -16,7 +16,8 @@ from app.query.query_expanision.ambiguous_query_handler import (
     expand_and_bound_ambiguous_query,
 )
 from app.query.formatter import create_weaviate_filter
-from app.query.executor.query_executor import QueryEmbedder
+
+# from app.query.executor.query_executor import QueryEmbedder
 
 
 def _to_int(val):
@@ -36,7 +37,9 @@ def run_pipeline_test(user_query, client):
     entities = res["entities"]
     print(f"Extracted Entities: {entities}")
 
-    features = build_features(user_query, entities)  # ✅ no fallback — real errors will surface
+    features = build_features(
+        user_query, entities
+    )  # ✅ no fallback — real errors will surface
     print(f"Extracted Features: {features}")
 
     alpha = compute_alpha(features)
@@ -49,22 +52,11 @@ def run_pipeline_test(user_query, client):
 
     if classification["type"] == "Semantic":
 
-        try:
-            result_segment = build_query_segments(user_query, entities)
-            print(f"Query Segment: {result_segment}")
-            wv_filter = create_weaviate_filter(result_segment)
-        except Exception as e:
-            print(f"  ⚠️ Segment/filter error (skipping filter): {e}")
-            wv_filter = None
-
-        embedder = QueryEmbedder()
-        query_vector = embedder.get_vector(user_query)
-
         properties = client.collections.get("RealSearchPropData")
 
         results = properties.query.hybrid(
             query=user_query,
-            vector=query_vector,
+            # vector=query_vector,
             # filters=wv_filter,
             alpha=alpha,
             limit=10,
@@ -83,36 +75,53 @@ def run_pipeline_test(user_query, client):
         return retrieved_ids
 
     elif classification["type"] == "Ambiguous":
+
         predicted_queries = expand_and_bound_ambiguous_query(user_query)
         print(f"Predicted Queries: {predicted_queries}")
 
         seen = set()
         retrieved_ids = []
 
-        for i, pq in enumerate(predicted_queries, 1):
-            try:
-                embedder = QueryEmbedder()
-                query_vector = embedder.get_vector(pq)
-                properties = client.collections.get("RealSearchPropData")
+        properties = client.collections.get("RealSearchPropData")
 
+        for i, pq in enumerate(predicted_queries, 1):
+
+            pq = clean_query(pq)
+
+            res = extract_entities_from_user_query(pq)
+            entities = res["entities"]
+
+            features = build_features(pq, entities)
+            alpha = compute_alpha(features)
+            qtype = queryclassifier(features)
+
+            print(f"\n[Expansion {i}] Type: {qtype} | Alpha: {alpha:.3f}")
+
+            # if becomes semantic → use semantic retrieval
+            if qtype == "Semantic":
                 results = properties.query.hybrid(
-                    query=user_query,
-                    vector=query_vector,
+                    query=pq,
+                    alpha=alpha,
+                    limit=10,
+                )
+
+            else:
+                # fallback hybrid
+                results = properties.query.hybrid(
+                    query=pq,
                     alpha=1,
                     limit=10,
                 )
 
-                if results.objects:
-                    for j, obj in enumerate(results.objects, 1):
-                        p = obj.properties
-                        pid = _to_int(p.get("propertyId"))
-                        print(f" [{i}.{j}] {p.get('title')}")
-                        if pid not in seen:
-                            seen.add(pid)
-                            retrieved_ids.append(pid)
-            except Exception as e:
-                print(f"  ⚠️ Error on expanded query {i}: {e}")
-                continue
+            if results.objects:
+                for obj in results.objects:
+                    pid = _to_int(obj.properties.get("propertyId"))
+
+                    if pid not in seen:
+                        seen.add(pid)
+                        retrieved_ids.append(pid)
+
+                        print(f"  [{i}] {obj.properties.get('title')}")
 
         return retrieved_ids[:10]
 
@@ -124,15 +133,15 @@ def run_pipeline_test(user_query, client):
 def compute_alpha(features):
     slot_coverage, slot_conf, non_slot_ratio, num_loc, num_prop = features
 
-    num_loc = min(num_loc / 3, 1.0)
+    # num_loc = min(num_loc / 3, 1.0)
     num_prop = min(num_prop / 3, 1.0)
 
     alpha = (
-        + 0.4 * non_slot_ratio
-        + 0.2 * num_loc
-        + 0.1 * num_prop
-        - 0.3 * slot_coverage
-        - 0.3 * slot_conf
+        +0.4 * non_slot_ratio
+        # + 0.2 * num_loc
+        + 0.2 * num_prop
+        - 0.35 * slot_coverage
+        - 0.35 * slot_conf
     )
 
     alpha = 0.5 + alpha

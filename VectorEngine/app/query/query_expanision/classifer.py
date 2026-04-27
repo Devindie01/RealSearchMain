@@ -5,14 +5,21 @@ import torch
 import numpy as np
 import re
 
-from app.query.query_expanision.post_processing import extract_number, extract_price_details, normalize_count
+from app.query.query_expanision.post_processing import (
+    extract_number,
+    extract_price_details,
+    normalize_count,
+)
 from app.query.query_object import QuerySegment
 
 
 # Load your model
 # nlp = spacy.load(r"D:\FYP\RealSearch\VectorEngine\models\model-best")
 import os
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 nlp = spacy.load(os.path.join(BASE_DIR, "models", "model-best"))
 JUNK_WORDS = ["in", "at", "near", "with", "for", "the", "and", "of"]
 
@@ -51,21 +58,15 @@ def extract_entities_from_user_query(user_query):
 
     # Bedrooms
     if "no_bedrooms" in raw_entities:
-        processed["no_of_bedrooms"] = normalize_count(
-            raw_entities["no_bedrooms"][0]
-        )
+        processed["no_of_bedrooms"] = normalize_count(raw_entities["no_bedrooms"][0])
 
     # Bathrooms
     if "no_bathrooms" in raw_entities:
-        processed["no_of_bathrooms"] = normalize_count(
-            raw_entities["no_bathrooms"][0]
-        )
+        processed["no_of_bathrooms"] = normalize_count(raw_entities["no_bathrooms"][0])
 
     # Land size
     if "land_size" in raw_entities:
-        processed["land_size"] = extract_number(
-            raw_entities["land_size"][0]
-        )
+        processed["land_size"] = extract_number(raw_entities["land_size"][0])
 
     # Price
     if "price" in raw_entities:
@@ -80,24 +81,19 @@ def extract_entities_from_user_query(user_query):
         if processed.get("contract_type") in ["rent", "lease"]:
             processed["price_period"] = period
 
-    return {
-        "entities": processed,
-        "raw_entities": raw_entities  # optional debug
-    }
+    return {"entities": processed, "raw_entities": raw_entities}  # optional debug
+
 
 def queryclassifier(features):
     slot_coverage, slot_conf, non_slot_ratio, num_loc, num_prop = features
 
     # semantic conditions
-    if (
-        non_slot_ratio > 0.5 or
-        num_loc > 1 or
-        num_prop > 1
-    ):
-        return "Semantic"
+    if slot_coverage == 0:
+        return "Ambiguous"
 
     # otherwise ambiguous
-    return "Ambiguous"
+    return "Semantic"
+
 
 # def queryclassifier(user_query):
 #     res = extract_entities_from_user_query(user_query)

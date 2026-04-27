@@ -115,19 +115,21 @@ def split_property_types(value: str):
 
 
 def build_query_segments(user_query, entities):
-    base_data = {
+    # 'entities' here is the 'processed' dict from extract_entities_from_user_query
+    data = {
         "description": user_query,
-        "property_type": None,
-        "contract_type": None,
-        "price_min": None,
-        "price_max": None,
-        "price_unit": None,
-        "price_period": None,
-        "location": None,
-        "no_of_bedrooms": None,
-        "no_of_bathrooms": None,
-        "land_size": None,
+        "property_type": entities.get("property_type", []), # Use empty list, not [None]
+        "contract_type": entities.get("contract_type"),     # Already a string or None
+        "price_min": entities.get("price_min"),
+        "price_max": entities.get("price_max"),
+        "price_unit": entities.get("price_unit"),
+        "price_period": entities.get("price_period"),
+        "location": entities.get("location", []),           # Use empty list
+        "no_of_bedrooms": entities.get("no_of_bedrooms"),
+        "no_of_bathrooms": entities.get("no_of_bathrooms"),
+        "land_size": entities.get("land_size"),
     }
+    return QuerySegment(**data)
 
     # --- Normalize shared fields ---
     contract_type = entities.get("contract_type", [None])[0]
