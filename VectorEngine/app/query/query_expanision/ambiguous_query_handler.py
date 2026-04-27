@@ -11,7 +11,7 @@ load_dotenv()
 from sentence_transformers import SentenceTransformer
 import faiss
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_API_KEY = "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"
 
 BASE_URL = "https://openrouter.ai/api/v1"
 MODEL_NAME1 = "arcee-ai/trinity-large-preview:free"
