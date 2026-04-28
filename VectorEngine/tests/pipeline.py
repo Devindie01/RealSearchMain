@@ -15,6 +15,7 @@ from app.query.query_expanision.semantic_query_handler import get_alpha_from_ent
 from app.query.query_expanision.ambiguous_query_handler import (
     expand_and_bound_ambiguous_query,
 )
+from tests.dynamic_alpha import compute_alpha_from_entities
 from app.query.formatter import create_weaviate_filter
 
 # from app.query.executor.query_executor import QueryEmbedder
@@ -37,20 +38,21 @@ def run_pipeline_test(user_query, client):
     entities = res["entities"]
     print(f"Extracted Entities: {entities}")
 
-    features = build_features(
-        user_query, entities
-    )  # ✅ no fallback — real errors will surface
-    print(f"Extracted Features: {features}")
+    # features = build_features(
+    #     user_query, entities
+    # )  # ✅ no fallback — real errors will surface
+    # print(f"Extracted Features: {features}")
 
-    alpha = compute_alpha(features)
-    print(f"Computed Alpha: {alpha}")
+    type_label = queryclassifier(entities)
 
-    type_label = queryclassifier(features)
     classification = {"type": type_label}
 
-    print(f"Type: {classification['type']} | Alpha: {alpha:.3f}")
+    print(f"Type: {classification['type']}")
 
     if classification["type"] == "Semantic":
+
+        alpha = compute_alpha_from_entities(user_query, entities)
+        print(f"Computed Alpha: {alpha}")
 
         properties = client.collections.get("RealSearchPropData")
 
@@ -75,59 +77,28 @@ def run_pipeline_test(user_query, client):
         return retrieved_ids
 
     elif classification["type"] == "Ambiguous":
-
         predicted_queries = expand_and_bound_ambiguous_query(user_query)
         print(f"Predicted Queries: {predicted_queries}")
-
-        seen = set()
-        retrieved_ids = []
-
-        properties = client.collections.get("RealSearchPropData")
-
+        all_properties = []
         for i, pq in enumerate(predicted_queries, 1):
+            properties = client.collections.get("RealSearchPropData")
 
-            pq = clean_query(pq)
+            results = properties.query.hybrid(
+                query=user_query,  # Keyword part
+                # vector=query_vector,  # Vector part
+                alpha=1,  # Dynamically calculated weight
+                limit=10,
+            )
+            all_properties.append(results.objects)
 
-            res = extract_entities_from_user_query(pq)
-            entities = res["entities"]
-
-            features = build_features(pq, entities)
-            alpha = compute_alpha(features)
-            qtype = queryclassifier(features)
-
-            print(f"\n[Expansion {i}] Type: {qtype} | Alpha: {alpha:.3f}")
-
-            # if becomes semantic → use semantic retrieval
-            if qtype == "Semantic":
-                results = properties.query.hybrid(
-                    query=pq,
-                    alpha=alpha,
-                    limit=10,
-                )
-
-            else:
-                # fallback hybrid
-                results = properties.query.hybrid(
-                    query=pq,
-                    alpha=1,
-                    limit=10,
-                )
-
-            if results.objects:
-                for obj in results.objects:
-                    pid = _to_int(obj.properties.get("propertyId"))
-
-                    if pid not in seen:
-                        seen.add(pid)
-                        retrieved_ids.append(pid)
-
-                        print(f"  [{i}] {obj.properties.get('title')}")
-
-        return retrieved_ids[:10]
+        if all_properties:
+            for i, obj_list in enumerate(all_properties, 1):
+                for j, obj in enumerate(obj_list, 1):
+                    p = obj.properties
+                    print(f" [{i}.{j}] {p.get('title')}")
 
     else:
-        print("Non-semantic query detected. Skipping.")
-        return []
+        print("Non-semantic query detected. Skipping LLM extraction and vectorization.")
 
 
 def compute_alpha(features):

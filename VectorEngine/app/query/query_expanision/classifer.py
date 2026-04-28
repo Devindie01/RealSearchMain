@@ -84,26 +84,25 @@ def extract_entities_from_user_query(user_query):
     return {"entities": processed, "raw_entities": raw_entities}  # optional debug
 
 
-def queryclassifier(features):
-    slot_coverage, slot_conf, non_slot_ratio, num_loc, num_prop = features
+# def queryclassifier(features):
+#     slot_coverage, slot_conf, non_slot_ratio, num_loc, num_prop = features
 
-    # semantic conditions
-    if slot_coverage == 0:
+#     # semantic conditions
+#     if slot_coverage == 0:
+#         return "Ambiguous"
+
+#     # otherwise ambiguous
+#     return "Semantic"
+
+
+def queryclassifier(entities):
+    # res = extract_entities_from_user_query(user_query)
+    # entities = res["entities"]
+
+    if len(entities) == 0:
         return "Ambiguous"
-
-    # otherwise ambiguous
-    return "Semantic"
-
-
-# def queryclassifier(user_query):
-#     res = extract_entities_from_user_query(user_query)
-#     entities = res["entities"]
-
-#     if len(entities) == 0:
-#         res["type"] = "Ambiguous"
-#     else:
-#         res["type"] = "Semantic"
-#     return res
+    else:
+        return "Semantic"
 
 
 # def map_entities_to_query_segment(

@@ -12,13 +12,13 @@ from sentence_transformers import SentenceTransformer
 import faiss
 
 BASE_URL = "https://openrouter.ai/api/v1"
-MODEL_NAME1 = "google/gemini-2.0-flash-lite-001"
+MODEL_NAME1 = "google/gemini-2.0-flash-001"
 
 llm = ChatOpenAI(
     model=MODEL_NAME1,
     temperature=0.2,
     base_url=BASE_URL,
-    api_key="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",
+    api_key="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",
 )
 
 SYSTEM_PROMPT_QNA = """
@@ -126,7 +126,9 @@ def run_qna_agent(query: str) -> dict:
     content = content.replace("```json", "").replace("```", "").strip()
 
     if not content:
-        raise ValueError("LLM returned empty response — query may be invalid or too vague")
+        raise ValueError(
+            "LLM returned empty response — query may be invalid or too vague"
+        )
 
     result = json.loads(content)
     print(f"    📋 Reasoning: {result.get('reasoning_summary', '')[:120]}...")
@@ -134,7 +136,9 @@ def run_qna_agent(query: str) -> dict:
 
 
 def run_reflection_agent(original_query: str, candidate_queries: list) -> dict:
-    print(f"    🔍 Reflection agent — validating {len(candidate_queries)} candidates...")
+    print(
+        f"    🔍 Reflection agent — validating {len(candidate_queries)} candidates..."
+    )
     response = llm.invoke(
         [
             SystemMessage(content=SYSTEM_PROMPT_REFLECTION),
@@ -146,7 +150,9 @@ def run_reflection_agent(original_query: str, candidate_queries: list) -> dict:
             ),
         ]
     )
-    print(f"    ✅ Reflection agent — response received ({len(response.content)} chars)")
+    print(
+        f"    ✅ Reflection agent — response received ({len(response.content)} chars)"
+    )
 
     # Strip markdown code fences if present
     content = response.content.strip()
@@ -156,8 +162,8 @@ def run_reflection_agent(original_query: str, candidate_queries: list) -> dict:
         raise ValueError("Reflection agent returned empty response")
 
     result = json.loads(content)
-    approved   = result.get("approved", False)
-    issues     = result.get("issues", [])
+    approved = result.get("approved", False)
+    issues = result.get("issues", [])
     suggestion = result.get("suggestion", "")
 
     print(f"    {'✅ Approved' if approved else '❌ Not approved'}")
