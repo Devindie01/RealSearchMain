@@ -11,10 +11,8 @@ load_dotenv()
 from sentence_transformers import SentenceTransformer
 import faiss
 
-# OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-
 BASE_URL = "https://openrouter.ai/api/v1"
-MODEL_NAME1 = "arcee-ai/trinity-large-preview:free"
+MODEL_NAME1 = "google/gemini-2.0-flash-lite-001"
 
 llm = ChatOpenAI(
     model=MODEL_NAME1,
@@ -22,6 +20,7 @@ llm = ChatOpenAI(
     base_url=BASE_URL,
     api_key="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",
 )
+
 SYSTEM_PROMPT_QNA = """
 You are a domain-constrained real estate reasoning agent for Sri Lanka.
 
@@ -113,16 +112,29 @@ Candidate expanded queries:
 
 
 def run_qna_agent(query: str) -> dict:
+    print(f"    🤖 QnA agent — sending query to LLM...")
     response = llm.invoke(
         [
             SystemMessage(content=SYSTEM_PROMPT_QNA),
             HumanMessage(content=USER_PROMPT_QNA.format(query=query)),
         ]
     )
-    return json.loads(response.content)
+    print(f"    ✅ QnA agent — response received ({len(response.content)} chars)")
+
+    # Strip markdown code fences if present
+    content = response.content.strip()
+    content = content.replace("```json", "").replace("```", "").strip()
+
+    if not content:
+        raise ValueError("LLM returned empty response — query may be invalid or too vague")
+
+    result = json.loads(content)
+    print(f"    📋 Reasoning: {result.get('reasoning_summary', '')[:120]}...")
+    return result
 
 
 def run_reflection_agent(original_query: str, candidate_queries: list) -> dict:
+    print(f"    🔍 Reflection agent — validating {len(candidate_queries)} candidates...")
     response = llm.invoke(
         [
             SystemMessage(content=SYSTEM_PROMPT_REFLECTION),
@@ -134,34 +146,54 @@ def run_reflection_agent(original_query: str, candidate_queries: list) -> dict:
             ),
         ]
     )
-    return json.loads(response.content)
+    print(f"    ✅ Reflection agent — response received ({len(response.content)} chars)")
+
+    # Strip markdown code fences if present
+    content = response.content.strip()
+    content = content.replace("```json", "").replace("```", "").strip()
+
+    if not content:
+        raise ValueError("Reflection agent returned empty response")
+
+    result = json.loads(content)
+    approved   = result.get("approved", False)
+    issues     = result.get("issues", [])
+    suggestion = result.get("suggestion", "")
+
+    print(f"    {'✅ Approved' if approved else '❌ Not approved'}")
+    if not approved:
+        print(f"    ⚠️  Issues: {issues}")
+        print(f"    💡 Suggestion: {suggestion[:120]}...")
+    return result
 
 
 def expand_and_bound_ambiguous_query(query: str, max_iterations: int = 3):
+    print(f"\n  🔀 Expanding ambiguous query (max {max_iterations} iterations)...")
+    print(f"  Original: {query[:120]}...")
+
     iteration = 0
     last_result = None
 
     while iteration < max_iterations:
-        print(f"\n🔁 Iteration {iteration + 1}")
-        print("Ambiguous Query:", query)
+        print(f"\n  🔁 Iteration {iteration + 1}/{max_iterations}")
 
         qna_result = run_qna_agent(query)
-        reasoning = qna_result["reasoning_summary"]
         candidate_queries = qna_result["candidate_queries"]
 
-        print("\nCandidate Queries:")
-        for q in candidate_queries:
-            print("-", q)
+        print(f"\n  📝 Candidate queries ({len(candidate_queries)}):")
+        for i, q in enumerate(candidate_queries, 1):
+            print(f"    [{i}] {q[:120]}...")
 
         reflection = run_reflection_agent(query, candidate_queries)
 
         if reflection["approved"]:
-            print("\n✅ Reflection Approved")
+            print(f"\n  ✅ Expansion approved on iteration {iteration + 1}")
             return candidate_queries
 
-        # Feed reflection feedback back into query
         query = f"{query}. Clarification: {reflection['suggestion']}"
+        print(f"\n  🔄 Retrying with clarified query: {query[:120]}...")
         last_result = candidate_queries
         iteration += 1
 
+    print(f"\n  ⚠️  Max iterations reached — returning last result")
     return last_result

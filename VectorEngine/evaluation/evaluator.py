@@ -21,8 +21,8 @@ from tests.pipeline import run_pipeline_test
 from dotenv import load_dotenv
 
 # ── Config ────────────────────────────────────────────────────────────────────
-START_QUERY_ID = 2
-END_QUERY_ID = 208
+START_QUERY_ID = 1
+END_QUERY_ID = 50
 
 MAX_RETRIES = 3
 RETRY_DELAY = 10
