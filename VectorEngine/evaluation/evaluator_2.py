@@ -126,7 +126,8 @@ def evaluate_baseline(name, baseline_csv, gt_lookup, query_map):
     for query_text, retrieved_ids in baseline_results.items():
         query_id = text_to_id.get(query_text)
 
-        if query_id is None:
+        # 🔒 FILTER: only evaluate queries 2–185
+        if query_id is None or not (2 <= query_id <= 185):
             skipped += 1
             continue
 
