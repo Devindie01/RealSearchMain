@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 # ── Config ────────────────────────────────────────────────────────────────────
 START_QUERY_ID = 2
-END_QUERY_ID = 185
+END_QUERY_ID = 208
 MAX_RETRIES = 3
 RETRY_DELAY = 10
 QUERY_DELAY = 1.0
@@ -83,7 +83,6 @@ def generate_explanations(
     explanations = []
     for prop_id in retrieved_ids[:top_k]:
         description = fetch_property_description(client, prop_id)
-        full_description = description + "price of the property:" + str(price)
         if not description:
             print(f"    ⚠️  No description found for {prop_id} — skipping explanation")
             continue

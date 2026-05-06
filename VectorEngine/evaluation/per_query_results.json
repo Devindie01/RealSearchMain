@@ -33,7 +33,7 @@
         "explanations": [
             {
                 "property_id": 48,
-                "explanation": "This property is a great match for your search! It has 5 bedrooms and is located just 1.3 km from Habaraduwa Beach, meeting your beach proximity requirement. It also has electricity and water connected, plus a clear legal status. However, it\u2019s slightly further from Talpe and Ahangama than you specified."
+                "explanation": "This property is a great match for your search! It has 5 bedrooms and is only 1.3 km from Habaraduwa Beach, meeting your beach proximity requirement. It also has electricity and water connected, which you wanted. However, it has only 1 central bathroom instead of the 4-5 you requested. Overall, it aligns well with your needs!"
             },
             {
                 "property_id": 42,
@@ -41,7 +41,35 @@
             },
             {
                 "property_id": 54,
-                "explanation": "This property is a great match for your search! It has 4 bedrooms, is just 2 km from the beach, and has electricity and water already connected. It's located in the Ahangama area, which you mentioned. However, it has only one family bathroom instead of the 4-5 you requested. Overall, it offers a peaceful setting with potential for your dream home!"
+                "explanation": "This property is a great match for your search! It has four bedrooms and is located just 2 km from Ahangama Beach, meeting your distance requirement. It also has electricity and water already connected. However, it only has one family bathroom instead of the requested four to five bathrooms. Overall, it offers a peaceful setting with potential for your dream home!"
+            },
+            {
+                "property_id": 49,
+                "explanation": "This property is a great match for your search! It has 4 en-suite bedrooms and is only 700 meters from Kathaluwa Beach, well within your 2.5 km limit. It also has clear legal status. However, it\u2019s important to note that it has not yet been fully completed, which may require additional work."
+            },
+            {
+                "property_id": 520,
+                "explanation": "This property is a great match for your search! It has 4 bedrooms, is just 2 km from the beach, and has electricity and water already connected. It's located in the Ahangama area, which you mentioned. However, it only has one family bathroom instead of the 4-5 you requested. Overall, it offers a lot of potential!"
+            },
+            {
+                "property_id": 63,
+                "explanation": "This property was recommended because it has 5 bedrooms and is located within 2 km of Thalpe Beach, meeting your beach proximity requirement. It also has electricity and water connected, which aligns with your needs. However, it only has 1 bathroom instead of the requested 4-5 bathrooms, and it's slightly further from Unawatuna Beach than your specified distance."
+            },
+            {
+                "property_id": 46,
+                "explanation": "This property is a great match for your search! It has 4 bedrooms and is only 1.2 km from Talpe Beach, well within your distance preference. Mains electricity and water are already connected, meeting your requirements. However, it has only 2 bathrooms instead of the 4-5 you requested. Overall, it\u2019s a charming option in your desired area!"
+            },
+            {
+                "property_id": 851,
+                "explanation": "This property is a 60 perch plot of land in Habaraduwa, which is within your preferred location and just a short distance from the beach. It has clear legal status, which meets your requirement for verifying the Title Report. However, it does not have the specified number of bedrooms and bathrooms, as it is land rather than a house."
+            },
+            {
+                "property_id": 167,
+                "explanation": "This property is a great match for your search! It has 4 bedrooms and 5 bathrooms, fitting your requirement perfectly. It's located near the beach, and the lush garden offers a beautiful setting. However, please confirm if electricity and water are connected, as that detail wasn't specified. Overall, it aligns well with your preferences!"
+            },
+            {
+                "property_id": 59,
+                "explanation": "This property was recommended because it has five bedrooms and is located just 700 meters from the beach, meeting your requirement for proximity. It also has electricity and water already connected. However, it is in Ahangama, which is slightly outside your preferred Habaraduwa area, but still within your acceptable range."
             }
         ]
     },
@@ -79,107 +107,43 @@
         "explanations": [
             {
                 "property_id": 451,
-                "explanation": "This property was recommended because it has 4 bedrooms and 3 bathrooms, which exceeds your requirement for 3 bedrooms and 2 bathrooms. It also offers a full kitchen and spacious living areas. However, it is located in Ragama, not Ahangama, and does not mention air conditioning in all bedrooms or a garden, which may not fully meet your needs."
+                "explanation": "This property was recommended because it offers 4 bedrooms and 3 bathrooms, which exceeds your requirement for 3 bedrooms and 2 bathrooms. The monthly rent of Rs. 130,000 is well within your budget. However, it is located in Ragama, not Ahangama, and it does not mention air conditioning in all bedrooms or a small garden."
             },
             {
                 "property_id": 242,
-                "explanation": "This property is a cozy studio in Ahangama, available for rent starting from 21 February, which fits your timeline. It has air conditioning, a full kitchen, and a common terrace. However, it only has one bedroom and is designed for a maximum of three occupants, which doesn't meet your requirement for three bedrooms."
+                "explanation": "This property is a cozy studio in Ahangama, available for rent at Rs 130,000 per month, which fits your budget. It includes air conditioning, a full kitchen, and a living area. However, it only has one bedroom and is designed for a maximum of three occupants, which doesn't fully meet your request for a 3-bedroom house."
             },
             {
                 "property_id": 59,
-                "explanation": "This property was recommended because it is located in Ahangama, which matches your desired area. It has five bedrooms, exceeding your requirement, and a kitchen. However, it is for sale, not for rent, and lacks air conditioning and the small garden you requested. Additionally, it may be outside your budget for a rental."
-            }
-        ]
-    },
-    {
-        "query_id": "4",
-        "query": "Looking for a 3+ bedroom boutique villa for long term lease.\nIn between galle fort to Thalpe.",
-        "retrieved": [
-            184,
-            192,
-            185,
-            221,
-            190,
-            193,
-            178,
-            180,
-            162,
-            591
-        ],
-        "relevant": [
-            184,
-            180,
-            192,
-            221,
-            188,
-            190,
-            185,
-            154,
-            593,
-            63
-        ],
-        "precision@10": 0.6,
-        "recall@10": 0.6,
-        "f1@10": 0.6,
-        "ndcg@10": 0.7183627972686238,
-        "explanations": [
-            {
-                "property_id": 184,
-                "explanation": "This property was recommended because it has four bedrooms, exceeding your request for 3+ bedrooms, and is located in Galle Fort, which is between Galle Fort and Thalpe. However, please note that this villa is available for short-term stays rather than a long-term lease, which may not fully meet your needs."
+                "explanation": "This property is located in Ahangama, matching your desired area. It has five bedrooms, exceeding your requirement of three, and a kitchen. However, it is for sale, not for rent, and lacks air conditioning and a small garden, which are important for your needs. The budget is also not applicable since it's a sale listing."
             },
             {
-                "property_id": 192,
-                "explanation": "Villa Summer Dream is a great match for your search as it offers 4 spacious bedrooms, perfect for your need for 3+ bedrooms. It's located in Talpe, conveniently between Galle Fort and Thalpe, just 9 km from Galle. However, please note that it is a villa for lease rather than a boutique villa, which may differ from your preference."
+                "property_id": 484,
+                "explanation": "This property was recommended because it has 2 bathrooms and is located in a quiet area, which aligns with your preference for a peaceful environment. However, it only has 2 bedrooms instead of the requested 3, and it is also unfurnished. Additionally, the rental period is a minimum of one year, which does not match your 2-3 month requirement."
             },
             {
-                "property_id": 185,
-                "explanation": "This property was recommended because it is a boutique villa located in Talpe, which is between Galle Fort and Thalpe. It offers beautiful ocean views and a relaxing atmosphere. However, it only has two bedrooms, while you requested a 3+ bedroom villa, so it may not fully meet your needs for space."
-            }
-        ]
-    },
-    {
-        "query_id": "5",
-        "query": "Hi, Im looking for a house to rent in Hiriketya from 1.11.25-1.12.25. I would like a house with a good kitchen, an outside place to sit and a workingplace. ",
-        "retrieved": [
-            756,
-            751,
-            183,
-            811,
-            190,
-            821,
-            169,
-            97,
-            39,
-            711
-        ],
-        "relevant": [
-            169,
-            176,
-            484,
-            756,
-            811,
-            97,
-            821,
-            170,
-            296,
-            295
-        ],
-        "precision@10": 0.5,
-        "recall@10": 0.5,
-        "f1@10": 0.5,
-        "ndcg@10": 0.5360735436824436,
-        "explanations": [
-            {
-                "property_id": 756,
-                "explanation": "This property is located near Hiriketiya, which matches your desired area. It offers a good plot for building a house, potentially allowing for a nice kitchen and outdoor sitting space. However, the existing house needs major work, and it may not be ready for immediate rental as you requested."
+                "property_id": 714,
+                "explanation": "This property is located in Ahangama, matching your desired location. It has 4 bedrooms and 4 bathrooms, exceeding your requirements. However, it is for sale, not for rent, and is partially completed, which may not suit your need for a ready-to-move-in home. Additionally, it lacks a small garden and terrace space."
             },
             {
-                "property_id": 751,
-                "explanation": "This property was recommended because it is currently available for rent and has a kitchen, which aligns with your request. However, it is located in Wattala, not Hiriketya, and it may not have a designated outside sitting area or workspace as you specified. Additionally, the rental period you mentioned is not confirmed for this property."
+                "property_id": 49,
+                "explanation": "This property is recommended because it has four bedrooms and air conditioning in each, meeting your need for space and comfort. It's located in Ahangama, close to the beach, which aligns with your desired location. However, it has four bedrooms instead of three, and it\u2019s for sale rather than for rent, which may not fit your rental needs."
             },
             {
-                "property_id": 183,
-                "explanation": "This property was recommended because it offers a beautiful house with a good kitchen and an outdoor dining pavilion, perfect for sitting outside. It also has spacious living areas, which could serve as a workspace. However, please note that the rental dates you requested are not available, as this property is listed for different seasons."
+                "property_id": 235,
+                "explanation": "This property is recommended because it offers a spacious living room and a convenient location, which aligns with your need for a quiet home. However, it only has 2 bedrooms and 1 small additional room, falling short of your 3-bedroom requirement. The rent is well within your budget, but it lacks a garden and air conditioning in all bedrooms."
+            },
+            {
+                "property_id": 459,
+                "explanation": "This property was recommended because it has 3 bedrooms and 2 bathrooms, meeting your requirements. It also features a full kitchen and air conditioning in all rooms. However, it's located in Kurana, not Ahangama, which may not be ideal for you. Additionally, while it has a garden, it may not be the small garden you envisioned."
+            },
+            {
+                "property_id": 40,
+                "explanation": "This property is recommended because it is located in Ahangama and has 4 bedrooms and 3 bathrooms, exceeding your requirements. It features a full kitchen and a large terrace, which is great for outdoor space. However, it does not have air conditioning in all bedrooms, and the budget of 350,000 LKR may need to be confirmed."
+            },
+            {
+                "property_id": 244,
+                "explanation": "This property is a cozy studio annex in Ahangama, available for long-term rental at Rs 120,000 per month, well within your budget. It includes air conditioning, a small garden, and a living area with a couch. However, it only has one bedroom and one bathroom, which doesn't fully meet your requirement for three bedrooms and two bathrooms."
             }
         ]
     }
