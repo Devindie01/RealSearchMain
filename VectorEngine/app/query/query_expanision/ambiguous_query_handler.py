@@ -82,6 +82,7 @@ USER_PROMPT_QNA = """
 Ambiguous query:
 "{query}"
 """
+
 SYSTEM_PROMPT_REFLECTION = """
 You are a real estate query reflection and validation agent for Sri Lanka.
 
@@ -91,8 +92,8 @@ Evaluate whether the proposed expanded queries successfully reduce ambiguity.
 VALIDATION CRITERIA:
 - Each query must be concrete and specific.
 - Must use real-estate features found in listings.
-- Must clearly resolve location, property type but no need to have bathroom/bedroom counts.
-- Must NOT contain abstract  wording.
+- Must clearly resolve location, property type, and key attributes.
+- Must NOT contain abstract, lifestyle, or vague wording.
 - Must be suitable for direct dataset filtering.
 
 OUTPUT FORMAT (STRICT JSON):
@@ -206,7 +207,3 @@ def expand_and_bound_ambiguous_query(query: str, max_iterations: int = 3):
 
     print(f"\n  ⚠️  Max iterations reached — returning last result")
     return last_result
-
-
-if __name__ == "__main__":
-    
