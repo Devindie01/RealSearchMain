@@ -50,19 +50,19 @@ def extract_entities_from_user_query(user_query):
 
     # Locations (keep all)
     if "location" in raw_entities:
-        processed["location"] = list(set(raw_entities["location"]))
+        processed["location"] = list(set(raw_entities["location"])) #get google api coordinates
 
     # Contract type (take first)
     if "contract_type" in raw_entities:
         processed["contract_type"] = raw_entities["contract_type"][0]
 
     # Bedrooms
-    if "no_bedrooms" in raw_entities:
-        processed["no_of_bedrooms"] = normalize_count(raw_entities["no_bedrooms"][0])
+    if "no_of_bedrooms" in raw_entities:
+        processed["no_of_bedrooms"] = normalize_count(raw_entities["no_of_bedrooms"][0])
 
     # Bathrooms
-    if "no_bathrooms" in raw_entities:
-        processed["no_of_bathrooms"] = normalize_count(raw_entities["no_bathrooms"][0])
+    if "no_of_bathrooms" in raw_entities:
+        processed["no_of_bathrooms"] = normalize_count(raw_entities["no_of_bathrooms"][0])
 
     # Land size
     if "land_size" in raw_entities:

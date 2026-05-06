@@ -32,7 +32,13 @@ def create_weaviate_filter(segment: QuerySegment):
         filters.append(Filter.by_property("contractType").equal(segment.contract_type))
 
     if segment.price_max:
-        filters.append(Filter.by_property("priceLKR").less_or_equal(segment.price_max))
+        if segment.price_unit.upper() == "LKR":
+            filters.append(
+                Filter.by_property("priceUnit").less_or_equal(segment.price_unit)
+            )
+        else:
+            #use exchange rate to convert to LKR and filter
+            filters.append(Filter.by_property("priceLKR").less_or_equal(segment.price_max))
 
     if segment.location:
         locs = segment.location if isinstance(segment.location, list) else [segment.location]

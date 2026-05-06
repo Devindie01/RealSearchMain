@@ -110,9 +110,15 @@ def compute_alpha_from_entities(user_query: str, entities: dict) -> float:
 
     slot_conf = filled_f1 / F1_TOTAL
 
+    slot_coverage = len(entities) / 7
+
     # ── 3. Structuredness → Alpha ──────────────────────────────────
     structuredness = (0.5 * slot_ratio) + (0.5 * slot_conf)
+    # structuredness = slot_conf * slot_coverage
     # structuredness = slot_ratio
-    alpha = round(max(0.1, min(0.9, 1.0 - structuredness)), 4)
+
+    lambda_ = 0.5
+    alpha = 0.5 + lambda_ * (0.5 - structuredness)
+    alpha = round(max(0.1, min(0.9, alpha)), 4)
 
     return alpha

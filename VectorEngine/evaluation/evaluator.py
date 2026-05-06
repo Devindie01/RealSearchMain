@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 # ── Config ────────────────────────────────────────────────────────────────────
 START_QUERY_ID = 2
-END_QUERY_ID = 208
+END_QUERY_ID = 185
 
 MAX_RETRIES = 3
 RETRY_DELAY = 10

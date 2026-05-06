@@ -1,3 +1,4 @@
+from weaviate.classes.query import Filter
 import sys
 from pathlib import Path
 from weaviate.classes.query import Filter
@@ -30,16 +31,19 @@ def _to_int(val):
         return val
 
 
-def run_pipeline_test(user_query, client):
+def run_pipeline_test(
+    user_query,
+    client,
+):
     print(f"\n{'='*60}\nQUERY: {user_query}")
 
     user_query = clean_query(user_query)
 
     res = extract_entities_from_user_query(user_query)
     raw_entities = res["raw_entities"]
+    print(f"Raw Extracted Entities: {raw_entities}")
     entities = res["entities"]
     print(f"Extracted Entities: {entities}")
-    print(f"Raw Entities: {raw_entities}")
 
     # features = build_features(
     #     user_query, entities
@@ -57,19 +61,29 @@ def run_pipeline_test(user_query, client):
         alpha = compute_alpha_from_entities(user_query, entities)
         print(f"Computed Alpha: {alpha}")
 
-        properties = client.collections.get("RealSearchPropData")
+        # wv_filter = create_weaviate_filter(build_query_segments(entities))
+
+        properties = client.collections.get("RealSearchPropDataf")
 
         results = properties.query.hybrid(
             query=user_query,
-            # vector=query_vector,
-            # filters=wv_filter,
+            # # vector=query_vector,
+            # filters=(Filter.by_property("bedrooms").equal("10")),
             alpha=alpha,
             limit=10,
-            filters=(
-                Filter.by_property("bedrooms").equal("5")  
-                
-            )
         )
+
+    #     results = properties.query.hybrid(
+    #         query=user_query,  # soft filter injected here
+    #         alpha=0.5,
+    #         target_vector="default",                       # optional explicit vector
+    #         query_properties=["description", "bedroom_text"],  # BM25 scope
+    #         limit=10,
+    #         return_metadata=client.query.MetadataQuery(score=True)
+    # #    )
+
+    #     for obj in results.objects:
+    #         print(obj.properties["title"], obj.properties["bedroom_count"], obj.metadata.score)
 
         retrieved_ids = []
         if results.objects:
@@ -88,7 +102,7 @@ def run_pipeline_test(user_query, client):
     #     print(f"Predicted Queries: {predicted_queries}")
     #     all_properties = []
     #     for i, pq in enumerate(predicted_queries, 1):
-    #         properties = client.collections.get("RealSearchPropData")
+    #         properties = client.collections.get("RealSearchPropDataf")
 
     #         results = properties.query.hybrid(
     #             query=user_query,  # Keyword part
@@ -110,7 +124,7 @@ def run_pipeline_test(user_query, client):
         all_properties = []
 
         for i, pq in enumerate(predicted_queries, 1):
-            properties = client.collections.get("RealSearchPropData")
+            properties = client.collections.get("RealSearchPropDataf")
 
             results = properties.query.hybrid(
                 query=pq,  # ✅ IMPORTANT: use pq, not user_query
@@ -138,6 +152,9 @@ def run_pipeline_test(user_query, client):
         final_ids = random.sample(retrieved_ids, min(10, len(retrieved_ids)))
         # ✅ FINAL RETURN (this was missing)
         return final_ids if final_ids else []
+
+        # # ✅ FINAL RETURN (this was missing)
+        # return retrieved_ids[:10] if retrieved_ids else []
 
     else:
         print("Non-semantic query detected. Skipping LLM extraction and vectorization.")

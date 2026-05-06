@@ -3,6 +3,7 @@ from tests.pipeline import run_pipeline_test
 
 queries = [
     "Buy a House in Colombo",
+    "I'm looking for a 2 bedroom apartment for rent in Colombo 03 below 150,000 LKR",
     "Hello everyone! I’m looking for a house to buy or land with electricity and water already connected. 📍 Preferred location: Habaraduwa area ➡️ I will also consider properties from Talpe to Ahangama Requirements: • 4–5 bedrooms • 4–5 bathrooms • Maximum 2.5 km from the beach • Clear legal status – I will verify the Title Report with my lawyer.",
     "Looking for a 3+ bedroom villa for long term lease. In Thalpe",
     # "Hi, Im looking for a house to rent in Hiriketya from 1.11.25-1.12.25. I would like a house with a good kitchen, an outside place to sit and a workingplace.",
