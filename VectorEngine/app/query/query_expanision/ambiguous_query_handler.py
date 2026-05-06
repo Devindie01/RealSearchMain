@@ -57,6 +57,7 @@ RULES:
 - Stay strictly within real estate domain.
 - Use descriptive, relative terms for scale (e.g., compact, spacious, large) — do NOT specify exact bedroom or bathroom counts.
 - Use only dataset-realistic attributes (land size, amenities, views, parking, floor, layout type).
+- If ambigous query a;ready has ant of property_type, price, location, contract_type,land_size, no_of_bedrooms,no_of_bathrooms entities, make sure to preserve them in all candidate queries.
 - Avoid emotional, lifestyle, or abstract language.
 - Do NOT invent features or infrastructure not found in listings.
 - Do NOT collapse candidates into minor variations.
