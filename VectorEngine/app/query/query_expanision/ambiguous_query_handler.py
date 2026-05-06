@@ -30,6 +30,7 @@ Reduce ambiguity in an ambiguous real estate query by generating multiple plausi
 IMPORTANT:
 Your goal is NOT to find the single best interpretation.
 Your goal is to surface DIFFERENT valid interpretations that could realistically match the same ambiguous query.
+
 INTERNAL REASONING (do this silently):
 1. Identify multiple plausible user intents (not just one).
 2. For each intent, infer:
@@ -44,7 +45,8 @@ Each candidate query MUST differ meaningfully in at least ONE of:
 - Location type (e.g., urban vs beach vs hill country)
 - Property type (apartment vs house vs land vs hotel)
 - Use case (residential living vs investment vs hospitality)
-- Scale (compact apartment vs large land vs multi-bedroom property)
+- Scale (compact vs spacious vs large-scale property)
+
 LOCATION VARIATION (use different regions where plausible):
 - Beach towns: Mirissa, Bentota, Unawatuna, Hikkaduwa, Negombo
 - Hill country: Kandy, Nuwara Eliya, Ella, Hatton
@@ -53,7 +55,8 @@ LOCATION VARIATION (use different regions where plausible):
 
 RULES:
 - Stay strictly within real estate domain.
-- Use only dataset-realistic attributes (bedrooms, bathrooms, land size, amenities, views, parking, floor).
+- Use descriptive, relative terms for scale (e.g., compact, spacious, large) — do NOT specify exact bedroom or bathroom counts.
+- Use only dataset-realistic attributes (land size, amenities, views, parking, floor, layout type).
 - Avoid emotional, lifestyle, or abstract language.
 - Do NOT invent features or infrastructure not found in listings.
 - Do NOT collapse candidates into minor variations.
@@ -69,8 +72,9 @@ OUTPUT FORMAT (STRICT JSON):
 }
 
 Each candidate query must be:
-- Concrete
-- Dataset-realistic
+- Concrete and dataset-realistic
+- Focused on property type, location, usage, and key amenities
+- Free of exact numeric constraints on bedrooms or bathrooms
 - Clearly different in intent or context from the others
 """
 
@@ -78,7 +82,6 @@ USER_PROMPT_QNA = """
 Ambiguous query:
 "{query}"
 """
-
 SYSTEM_PROMPT_REFLECTION = """
 You are a real estate query reflection and validation agent for Sri Lanka.
 
@@ -88,8 +91,8 @@ Evaluate whether the proposed expanded queries successfully reduce ambiguity.
 VALIDATION CRITERIA:
 - Each query must be concrete and specific.
 - Must use real-estate features found in listings.
-- Must clearly resolve location, property type, and key attributes.
-- Must NOT contain abstract, lifestyle, or vague wording.
+- Must clearly resolve location, property type but no need to have bathroom/bedroom counts.
+- Must NOT contain abstract  wording.
 - Must be suitable for direct dataset filtering.
 
 OUTPUT FORMAT (STRICT JSON):
@@ -203,3 +206,7 @@ def expand_and_bound_ambiguous_query(query: str, max_iterations: int = 3):
 
     print(f"\n  ⚠️  Max iterations reached — returning last result")
     return last_result
+
+
+if __name__ == "__main__":
+    
