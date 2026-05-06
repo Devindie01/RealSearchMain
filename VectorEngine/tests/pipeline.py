@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
-
+from weaviate.classes.query import Filter
+import random 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -35,8 +36,10 @@ def run_pipeline_test(user_query, client):
     user_query = clean_query(user_query)
 
     res = extract_entities_from_user_query(user_query)
+    raw_entities = res["raw_entities"]
     entities = res["entities"]
     print(f"Extracted Entities: {entities}")
+    print(f"Raw Entities: {raw_entities}")
 
     # features = build_features(
     #     user_query, entities
@@ -62,6 +65,10 @@ def run_pipeline_test(user_query, client):
             # filters=wv_filter,
             alpha=alpha,
             limit=10,
+            filters=(
+                Filter.by_property("bedrooms").equal("5")  
+                
+            )
         )
 
         retrieved_ids = []
@@ -76,26 +83,61 @@ def run_pipeline_test(user_query, client):
 
         return retrieved_ids
 
+    # elif classification["type"] == "Ambiguous":
+    #     predicted_queries = expand_and_bound_ambiguous_query(user_query)
+    #     print(f"Predicted Queries: {predicted_queries}")
+    #     all_properties = []
+    #     for i, pq in enumerate(predicted_queries, 1):
+    #         properties = client.collections.get("RealSearchPropData")
+
+    #         results = properties.query.hybrid(
+    #             query=user_query,  # Keyword part
+    #             # vector=query_vector,  # Vector part
+    #             alpha=1,  # Dynamically calculated weight
+    #             limit=10,
+    #         )
+    #         all_properties.append(results.objects)
+
+    #     if all_properties:
+    #         for i, obj_list in enumerate(all_properties, 1):
+    #             for j, obj in enumerate(obj_list, 1):
+    #                 p = obj.properties
+    #                 print(f" [{i}.{j}] {p.get('title')}")
     elif classification["type"] == "Ambiguous":
         predicted_queries = expand_and_bound_ambiguous_query(user_query)
         print(f"Predicted Queries: {predicted_queries}")
+
         all_properties = []
+
         for i, pq in enumerate(predicted_queries, 1):
             properties = client.collections.get("RealSearchPropData")
 
             results = properties.query.hybrid(
-                query=user_query,  # Keyword part
-                # vector=query_vector,  # Vector part
-                alpha=1,  # Dynamically calculated weight
+                query=pq,  # ✅ IMPORTANT: use pq, not user_query
+                alpha=1,
                 limit=10,
             )
-            all_properties.append(results.objects)
+
+            if results.objects:
+                all_properties.extend(results.objects)
+
+        retrieved_ids = []
+        seen = set()
 
         if all_properties:
-            for i, obj_list in enumerate(all_properties, 1):
-                for j, obj in enumerate(obj_list, 1):
-                    p = obj.properties
-                    print(f" [{i}.{j}] {p.get('title')}")
+            for i, obj in enumerate(all_properties, 1):
+                p = obj.properties
+                pid = _to_int(p.get("propertyId"))
+
+                print(f" [{i}] {p.get('title')}")
+
+                if pid is not None and pid not in seen:
+                    seen.add(pid)
+                    retrieved_ids.append(pid)
+                    
+        final_ids = random.sample(retrieved_ids, min(10, len(retrieved_ids)))
+        # ✅ FINAL RETURN (this was missing)
+        return final_ids if final_ids else []
 
     else:
         print("Non-semantic query detected. Skipping LLM extraction and vectorization.")
