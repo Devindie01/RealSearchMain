@@ -164,7 +164,6 @@ def fetch_properties_from_csv(property_ids: list) -> list:
             })
     return results
 
-
 # ── Search endpoint ────────────────────────────────────────────────────────────
 @app.post("/search")
 def search(req: SearchRequest):
@@ -173,8 +172,16 @@ def search(req: SearchRequest):
 
     try:
         with get_client() as client:
-            retrieved_ids = run_pipeline_test(enriched_query, client)
-
+            # retrieved_ids = run_pipeline_test(enriched_query,req.price_min, req.price_max, req.bedrooms, req.bathrooms, req.area, client)
+            retrieved_ids = run_pipeline_test(
+                user_query=req.query,
+                price_min=req.price_min,
+                price_max=req.price_max,
+                bedrooms=req.bedrooms,
+                bathrooms=req.bathrooms,
+                area=req.area,
+                client=client,
+            )
         if isinstance(retrieved_ids, dict):
             retrieved_ids = retrieved_ids.get("ids", [])
         if not retrieved_ids:
