@@ -1,8 +1,14 @@
-# Example configuration for Weaviate
+# Example configuration for Weaviate //disini
 WEAVIATE_URL = (
     "qil30lj3r5kfwpznjpdwcg.c0.asia-southeast1.gcp.weaviate.cloud"  # or cloud endpoint
 )
 WEAVIATE_API_KEY = "SDNSMEU0b0FQWDIrcXZmeF9ZZk1mVTdJc3VQOU15L1N5dEk4U2lvb3czcVdSVkFZd29IQllNYkRMNFNvPV92MjAw"
+
+# Example configuration for Weaviate //devindie-cse
+WEAVIATE_URL = (
+    "54awazyksrgvdgqg47ftqw.c0.asia-southeast1.gcp.weaviate.cloud"  # or cloud endpoint
+)
+WEAVIATE_API_KEY = "Y3hja3prZmg4QjhPTGw3Vl9QbVIzSmI1bnNiTVRxZWJTblNzOXpudUxoMmZ3aTRWSkEreTVoOVFsUjZBPV92MjAw"
 
 
 # # Example configuration for Weaviate
