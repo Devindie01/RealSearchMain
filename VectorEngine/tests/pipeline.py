@@ -271,6 +271,7 @@ def run_pipeline_test(
     bathrooms,
     area,
     client,
+    lambda_: float = 0.5,
 ):
     print(f"\n{'='*60}\nQUERY: {user_query}")
 
@@ -292,7 +293,7 @@ def run_pipeline_test(
 
     if classification["type"] == "Semantic":
 
-        alpha = compute_alpha_from_entities(user_query, entities)
+        alpha = compute_alpha_from_entities(user_query, entities, lambda_)
         print(f"Computed Alpha: {alpha}")
 
         properties = client.collections.get("RealSearchPropDataf")

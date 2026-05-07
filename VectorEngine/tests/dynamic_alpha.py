@@ -29,7 +29,7 @@ def _price_filled(entities: dict) -> bool:
     )
 
 
-def compute_alpha_from_entities(user_query: str, entities: dict) -> float:
+def compute_alpha_from_entities(user_query: str, entities: dict, lambda_: float = 0.5) -> float:
 
     # ── 1. Slot-to-Residue Ratio ───────────────────────────────────
     STOP_WORDS = {
@@ -117,7 +117,7 @@ def compute_alpha_from_entities(user_query: str, entities: dict) -> float:
     # structuredness = slot_conf * slot_coverage
     # structuredness = slot_ratio
 
-    lambda_ = 0.5
+    # lambda_ = 0.5
     alpha = 0.5 + lambda_ * (0.5 - structuredness)
     alpha = round(max(0.1, min(0.9, alpha)), 4)
 
