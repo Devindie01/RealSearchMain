@@ -32,7 +32,7 @@ from langchain_openai import ChatOpenAI
 # Configuration — hardcode your API key and model here
 # ---------------------------------------------------------------------------
 
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 MODEL_NAME = "openai/gpt-4o-mini"
 
