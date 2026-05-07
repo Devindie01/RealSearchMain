@@ -30,6 +30,7 @@ Reduce ambiguity in an ambiguous real estate query by generating multiple plausi
 IMPORTANT:
 Your goal is NOT to find the single best interpretation.
 Your goal is to surface DIFFERENT valid interpretations that could realistically match the same ambiguous query.
+
 INTERNAL REASONING (do this silently):
 1. Identify multiple plausible user intents (not just one).
 2. For each intent, infer:
@@ -44,7 +45,8 @@ Each candidate query MUST differ meaningfully in at least ONE of:
 - Location type (e.g., urban vs beach vs hill country)
 - Property type (apartment vs house vs land vs hotel)
 - Use case (residential living vs investment vs hospitality)
-- Scale (compact apartment vs large land vs multi-bedroom property)
+- Scale (compact vs spacious vs large-scale property)
+
 LOCATION VARIATION (use different regions where plausible):
 - Beach towns: Mirissa, Bentota, Unawatuna, Hikkaduwa, Negombo
 - Hill country: Kandy, Nuwara Eliya, Ella, Hatton
@@ -53,7 +55,9 @@ LOCATION VARIATION (use different regions where plausible):
 
 RULES:
 - Stay strictly within real estate domain.
-- Use only dataset-realistic attributes (bedrooms, bathrooms, land size, amenities, views, parking, floor).
+- Use descriptive, relative terms for scale (e.g., compact, spacious, large) — do NOT specify exact bedroom or bathroom counts.
+- Use only dataset-realistic attributes (land size, amenities, views, parking, floor, layout type).
+- If ambigous query a;ready has ant of property_type, price, location, contract_type,land_size, no_of_bedrooms,no_of_bathrooms entities, make sure to preserve them in all candidate queries.
 - Avoid emotional, lifestyle, or abstract language.
 - Do NOT invent features or infrastructure not found in listings.
 - Do NOT collapse candidates into minor variations.
@@ -69,8 +73,9 @@ OUTPUT FORMAT (STRICT JSON):
 }
 
 Each candidate query must be:
-- Concrete
-- Dataset-realistic
+- Concrete and dataset-realistic
+- Focused on property type, location, usage, and key amenities
+- Free of exact numeric constraints on bedrooms or bathrooms
 - Clearly different in intent or context from the others
 """
 
