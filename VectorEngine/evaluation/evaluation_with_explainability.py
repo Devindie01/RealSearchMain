@@ -17,7 +17,7 @@ from evaluation.metrics import (
 )
 from app.storage.connections import get_client
 from tests.pipeline import run_pipeline_test
-from explainability.explainability import ExplainabilityEngine  # ← new
+from explainability.explainability import ExplainabilityEngine
 from dotenv import load_dotenv
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -34,6 +34,7 @@ csv_path = os.path.join(current_dir, "final_ground_truth.csv")
 per_query_out = os.path.join(current_dir, "per_query_results.json")
 aggregated_out = os.path.join(current_dir, "results.json")
 failed_out = os.path.join(current_dir, "failed_queries.json")
+explanations_csv_out = os.path.join(current_dir, "explanations_results.csv")  # ← new
 env_path = os.path.join(current_dir, "..", "app", ".env")
 
 load_dotenv(dotenv_path=env_path)
@@ -52,9 +53,7 @@ def fetch_property_description(client, property_id) -> str:
 
         collection = client.collections.get("RealSearchPropDataf")
         result = collection.query.fetch_objects(
-            filters=Filter.by_property("propertyId").equal(
-                str(property_id)
-            ),  # ← str() not int()
+            filters=Filter.by_property("propertyId").equal(str(property_id)),
             return_properties=["description"],
             limit=1,
         )
@@ -95,12 +94,20 @@ def generate_explanations(
             explanations.append(
                 {
                     "property_id": result["property_id"],
+                    "description": description,          # ← new
                     "explanation": result["explanation"],
                 }
             )
             print(f"    💬 Explained {prop_id}: {result['explanation']}")
         except Exception as e:
             print(f"    ⚠️  Explanation failed for {prop_id}: {e}")
+            explanations.append(
+                {
+                    "property_id": prop_id,
+                    "description": description,          # ← still capture description even if explanation fails
+                    "explanation": "",
+                }
+            )
     return explanations
 
 
@@ -158,6 +165,66 @@ def save_per_query(results, path):
 def save_failed(failed, path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(failed, f, indent=4)
+
+
+# ---------------------------------------------------------
+# Save explanations CSV
+# Each row = one retrieved property for a given query.
+# Columns: query_id, query, rank, property_id, explanation
+# ---------------------------------------------------------
+CSV_FIELDNAMES = ["query_id", "query", "rank", "property_id", "property_description", "explanation"]
+
+
+def init_csv(output_path: str) -> None:
+    """Write the CSV header if the file does not already exist (resume-safe)."""
+    if not os.path.exists(output_path):
+        with open(output_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=CSV_FIELDNAMES)
+            writer.writeheader()
+        print(f"📄 CSV initialised → {output_path}")
+
+
+def append_query_to_csv(result: dict, output_path: str) -> None:
+    """
+    Append all retrieved-property rows for a single query to the CSV.
+    Called immediately after each query completes so progress is never lost.
+
+    Columns
+    -------
+    query_id             : identifier of the query
+    query                : full query text
+    rank                 : 1-based position in the retrieved list
+    property_id          : the retrieved property's ID
+    property_description : Weaviate property description (empty if not available)
+    explanation          : LLM-generated explanation (empty if not available)
+    """
+    query_id   = result.get("query_id", "")
+    query_text = result.get("query", "")
+    retrieved  = result.get("retrieved", [])
+
+    # Build a lookup from property_id → {description, explanation}
+    exp_map = {
+        exp["property_id"]: {
+            "property_description": exp.get("description", ""),
+            "explanation": exp.get("explanation", ""),
+        }
+        for exp in result.get("explanations", [])
+    }
+
+    with open(output_path, "a", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_FIELDNAMES)
+        for rank, prop_id in enumerate(retrieved, start=1):
+            meta = exp_map.get(prop_id, {})
+            writer.writerow(
+                {
+                    "query_id":             query_id,
+                    "query":                query_text,
+                    "rank":                 rank,
+                    "property_id":          prop_id,
+                    "property_description": meta.get("property_description", ""),
+                    "explanation":          meta.get("explanation", ""),
+                }
+            )
 
 
 # ---------------------------------------------------------
@@ -232,6 +299,8 @@ if __name__ == "__main__":
     with get_client() as client:
         print("✅ Weaviate client connected\n")
 
+        init_csv(explanations_csv_out)
+
         for i, item in enumerate(data, start=1):
             query_id = str(item["query_id"])
             query_text = item["query"]
@@ -256,7 +325,7 @@ if __name__ == "__main__":
                     client=client,
                     query_text=query_text,
                     retrieved_ids=retrieved,
-                    top_k=10,  # ← change to explain more/fewer
+                    top_k=10,
                 )
 
                 # ── 3. Build result row (metrics + explanations) ───────────
@@ -269,7 +338,7 @@ if __name__ == "__main__":
                     "recall@10": recall_at_k(retrieved, relevant),
                     "f1@10": f1_at_k(retrieved, relevant),
                     "ndcg@10": ndcg_at_k(retrieved, relevant),
-                    "explanations": explanations,  # ← new field
+                    "explanations": explanations,
                 }
 
                 per_query_results.append(row)
@@ -278,6 +347,7 @@ if __name__ == "__main__":
                 )
                 done_ids.add(query_id)
                 save_per_query(per_query_results, per_query_out)
+                append_query_to_csv(row, explanations_csv_out)
 
                 print(
                     f"  💾 Saved — precision@10={row['precision@10']:.4f}  "
@@ -309,10 +379,12 @@ if __name__ == "__main__":
     with open(per_query_out, "w") as f:
         json.dump(per_query_results, f, indent=4)
 
+
     print(f"\n📊 Final Aggregated Metrics:")
     print(json.dumps(final_results, indent=4))
     print(f"\n💾 Saved to:")
     print(f"   {per_query_out}")
     print(f"   {aggregated_out}")
+    print(f"   {explanations_csv_out}")
     if failed_queries:
         print(f"   {failed_out} ({len(failed_queries)} failed queries)")
