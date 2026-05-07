@@ -2,7 +2,7 @@
 # import sys
 # from pathlib import Path
 # from weaviate.classes.query import Filter
-# import random 
+# import random
 # ROOT = Path(__file__).resolve().parents[1]
 # sys.path.insert(0, str(ROOT))
 
@@ -164,7 +164,7 @@
 #                 if pid is not None and pid not in seen:
 #                     seen.add(pid)
 #                     retrieved_ids.append(pid)
-                    
+
 #         final_ids = random.sample(retrieved_ids, min(10, len(retrieved_ids)))
 #         # ✅ FINAL RETURN (this was missing)
 #         return final_ids if final_ids else []
@@ -196,12 +196,12 @@
 #     return alpha
 
 
-
 from weaviate.classes.query import Filter
 import sys
 from pathlib import Path
 from weaviate.classes.query import Filter
-import random 
+import random
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -234,24 +234,24 @@ def build_filters(price_min, price_max, bedrooms, bathrooms):
 
     if price_min is not None and price_max is not None:
         filters.append(
-            Filter.by_property("price").greater_or_equal(price_min) &
-            Filter.by_property("price").less_or_equal(price_max)
+            Filter.by_property("price").greater_or_equal(price_min)
+            & Filter.by_property("price").less_or_equal(price_max)
         )
     elif price_min is not None:
-        filters.append(Filter.by_property("price").greater_or_equal(price_min))
+        filters.append(Filter.by_property("priceLKR").greater_or_equal(price_min))
     elif price_max is not None:
-        filters.append(Filter.by_property("price").less_or_equal(price_max))
+        filters.append(Filter.by_property("priceLKR").less_or_equal(price_max))
 
     if bedrooms is not None:
         filters.append(
-            Filter.by_property("bedrooms").greater_or_equal(bedrooms - 1) &
-            Filter.by_property("bedrooms").less_or_equal(bedrooms + 1)
+            Filter.by_property("bedrooms").greater_or_equal(bedrooms - 1)
+            & Filter.by_property("bedrooms").less_or_equal(bedrooms + 1)
         )
 
     if bathrooms is not None:
         filters.append(
-            Filter.by_property("bathrooms").greater_or_equal(bathrooms - 1) &
-            Filter.by_property("bathrooms").less_or_equal(bathrooms + 1)
+            Filter.by_property("bathrooms").greater_or_equal(bathrooms - 1)
+            & Filter.by_property("bathrooms").less_or_equal(bathrooms + 1)
         )
 
     if not filters:
@@ -347,7 +347,7 @@ def run_pipeline_test(
                 if pid is not None and pid not in seen:
                     seen.add(pid)
                     retrieved_ids.append(pid)
-                    
+
         final_ids = random.sample(retrieved_ids, min(10, len(retrieved_ids)))
         return final_ids if final_ids else []
 
