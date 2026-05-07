@@ -14,6 +14,8 @@ Expects a CSV named 'property_data.csv' in the same directory with columns:
 import sys
 import os
 import csv
+import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -26,6 +28,8 @@ from dotenv import load_dotenv
 
 from tests.pipeline import run_pipeline_test
 from app.storage.connections import get_client
+from explainability.explainability import ExplainabilityEngine
+from weaviate.classes.query import Filter
 
 # ── Load env ──────────────────────────────────────────────────────────────────
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -52,6 +56,13 @@ def load_property_csv(path: str) -> dict:
 
 PROPERTY_INDEX: dict = load_property_csv(CSV_PATH)
 
+# ── Explainability engine (singleton) ─────────────────────────────────────────
+explainer = ExplainabilityEngine()
+
+# ── In-memory explanation job store ───────────────────────────────────────────
+# job_id -> {"status": "pending"|"done"|"error", "results": [...], "error": str}
+EXPLANATION_JOBS: dict = {}
+_executor = ThreadPoolExecutor(max_workers=4)
 
 # ── App ────────────────────────────────────────────────────────────────────────
 app = FastAPI(title="Property Search API")
@@ -64,7 +75,7 @@ app.add_middleware(
 )
 
 
-# ── Request schema ─────────────────────────────────────────────────────────────
+# ── Request schemas ────────────────────────────────────────────────────────────
 class SearchRequest(BaseModel):
     query: str
     price_min: Optional[float] = None
@@ -72,6 +83,11 @@ class SearchRequest(BaseModel):
     bedrooms: Optional[int] = None
     bathrooms: Optional[int] = None
     area: Optional[float] = None
+
+
+class ExplainRequest(BaseModel):
+    query: str
+    property_ids: list[str]
 
 
 # ── Build enriched query string ────────────────────────────────────────────────
@@ -104,7 +120,6 @@ def row_to_property(pid: str, row: dict) -> dict:
         except (ValueError, TypeError):
             return None
 
-    # Combined price string: LKR + other currency if present
     price_lkr = num("Price_LKR")
     other_curr_val = val("Price_in_other_currency")
     other_curr_sym = val("Other_currency")
@@ -114,7 +129,6 @@ def row_to_property(pid: str, row: dict) -> dict:
         if other_curr_val and other_curr_sym:
             price_display += f"  ·  {other_curr_sym} {other_curr_val}"
 
-    # Land size with unit
     land = val("Land Size")
     land_unit = val("Land_size_unit")
     land_display = f"{land} {land_unit}".strip() if land else None
@@ -164,6 +178,70 @@ def fetch_properties_from_csv(property_ids: list) -> list:
             })
     return results
 
+
+# ── Fetch property description from Weaviate (with CSV fallback) ──────────────
+def fetch_property_description(client, property_id: str) -> str:
+    try:
+        collection = client.collections.get("RealSearchPropDataf")
+        result = collection.query.fetch_objects(
+            filters=Filter.by_property("propertyId").equal(str(property_id)),
+            return_properties=["description"],
+            limit=1,
+        )
+        if result.objects:
+            return result.objects[0].properties.get("description", "")
+    except Exception as e:
+        print(f"    ⚠️  Could not fetch description for {property_id}: {e}")
+    # Fallback: use CSV description
+    row = PROPERTY_INDEX.get(str(property_id).strip())
+    if row:
+        return (row.get("Full Description") or row.get("Description") or "").strip()
+    return ""
+
+
+# ── Background explanation job runner ─────────────────────────────────────────
+def _run_explanation_job(job_id: str, query: str, property_ids: list[str]):
+    """Runs in a thread pool. Updates EXPLANATION_JOBS when done."""
+    results = []
+    try:
+        with get_client() as client:
+            for pid in property_ids:
+                description = fetch_property_description(client, pid)
+                if not description:
+                    results.append({
+                        "property_id": pid,
+                        "explanation": None,
+                        "error": "No description available",
+                    })
+                    continue
+                try:
+                    result = explainer.explain(
+                        user_query=query,
+                        property_id=pid,
+                        property_description=description,
+                    )
+                    results.append({
+                        "property_id": pid,
+                        "explanation": result["explanation"],
+                        "error": None,
+                    })
+                    print(f"    💬 Explained {pid}")
+                except Exception as e:
+                    print(f"    ⚠️  Explanation failed for {pid}: {e}")
+                    results.append({
+                        "property_id": pid,
+                        "explanation": None,
+                        "error": str(e),
+                    })
+
+        EXPLANATION_JOBS[job_id] = {"status": "done", "results": results}
+        print(f"✅ Explanation job {job_id} complete ({len(results)} properties)")
+
+    except Exception as e:
+        print(f"❌ Explanation job {job_id} failed: {e}")
+        EXPLANATION_JOBS[job_id] = {"status": "error", "results": [], "error": str(e)}
+
+
 # ── Search endpoint ────────────────────────────────────────────────────────────
 @app.post("/search")
 def search(req: SearchRequest):
@@ -172,7 +250,6 @@ def search(req: SearchRequest):
 
     try:
         with get_client() as client:
-            # retrieved_ids = run_pipeline_test(enriched_query,req.price_min, req.price_max, req.bedrooms, req.bathrooms, req.area, client)
             retrieved_ids = run_pipeline_test(
                 user_query=req.query,
                 price_min=req.price_min,
@@ -182,6 +259,7 @@ def search(req: SearchRequest):
                 area=req.area,
                 client=client,
             )
+
         if isinstance(retrieved_ids, dict):
             retrieved_ids = retrieved_ids.get("ids", [])
         if not retrieved_ids:
@@ -199,6 +277,34 @@ def search(req: SearchRequest):
     except Exception as e:
         print(f"❌ Search failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Explain endpoint: submit a background job ─────────────────────────────────
+@app.post("/explain")
+def submit_explain(req: ExplainRequest):
+    """
+    Kick off background explanation generation.
+    Returns a job_id immediately; poll /explain/{job_id} for results.
+    """
+    job_id = str(uuid.uuid4())
+    EXPLANATION_JOBS[job_id] = {"status": "pending", "results": []}
+    _executor.submit(_run_explanation_job, job_id, req.query, req.property_ids)
+    print(f"🚀 Explanation job {job_id} submitted for {len(req.property_ids)} properties")
+    return {"job_id": job_id, "status": "pending"}
+
+
+# ── Poll explanation job status ────────────────────────────────────────────────
+@app.get("/explain/{job_id}")
+def poll_explain(job_id: str):
+    """
+    Returns job status and results.
+    status: "pending" | "done" | "error"
+    results: list of {property_id, explanation, error}
+    """
+    job = EXPLANATION_JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
 
 
 # ── Serve the frontend ─────────────────────────────────────────────────────────
