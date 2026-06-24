@@ -78,6 +78,7 @@ app.add_middleware(
 # ── Request schemas ────────────────────────────────────────────────────────────
 class SearchRequest(BaseModel):
     query: str
+    location:Optional[str] = None
     price_min: Optional[float] = None
     price_max: Optional[float] = None
     bedrooms: Optional[int] = None
@@ -93,6 +94,8 @@ class ExplainRequest(BaseModel):
 # ── Build enriched query string ────────────────────────────────────────────────
 def build_query(req: SearchRequest) -> str:
     parts = [req.query.strip()]
+    if req.location:
+        parts.append(f"The property should be located in {req.location}.")
     if req.price_min is not None and req.price_max is not None:
         parts.append(f"The price should be between {req.price_min:,.0f} and {req.price_max:,.0f} LKR.")
     elif req.price_min is not None:
@@ -252,6 +255,7 @@ def search(req: SearchRequest):
         with get_client() as client:
             retrieved_ids = run_pipeline_test(
                 user_query=req.query,
+                location = req.location,
                 price_min=req.price_min,
                 price_max=req.price_max,
                 bedrooms=req.bedrooms,

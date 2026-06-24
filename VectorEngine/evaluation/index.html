@@ -1,642 +1,3 @@
-<!-- <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RealSearch</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      :root {
-        --bg: #f5f2ec;
-        --card: #ffffff;
-        --ink: #1a1712;
-        --muted: #7a756c;
-        --accent: #c8622a;
-        --accent-light: #f0ddd1;
-        --border: #e2ddd6;
-        --radius: 12px;
-        --shadow: 0 2px 16px rgba(26, 23, 18, 0.08);
-      }
-
-      body {
-        font-family: "DM Sans", sans-serif;
-        background: var(--bg);
-        color: var(--ink);
-        min-height: 100vh;
-      }
-
-      /* ── Header ──────────────────────────────── */
-      header {
-        padding: 28px 40px 20px;
-        display: flex;
-        align-items: baseline;
-        gap: 10px;
-        border-bottom: 1px solid var(--border);
-        background: var(--bg);
-      }
-      header h1 {
-        font-family: "DM Serif Display", serif;
-        font-size: 1.7rem;
-        letter-spacing: -0.5px;
-      }
-      header span {
-        font-size: 0.8rem;
-        color: var(--muted);
-        font-weight: 300;
-      }
-
-      /* ── Search panel ────────────────────────── */
-      .search-panel {
-        max-width: 860px;
-        margin: 36px auto 0;
-        padding: 0 24px;
-      }
-
-      .query-row {
-        display: flex;
-        gap: 10px;
-      }
-      .query-row input {
-        flex: 1;
-        padding: 14px 18px;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-        font-family: inherit;
-        font-size: 1rem;
-        color: var(--ink);
-        outline: none;
-        transition: border-color 0.2s;
-      }
-      .query-row input:focus {
-        border-color: var(--accent);
-      }
-
-      button.search-btn {
-        padding: 14px 28px;
-        background: var(--accent);
-        color: #fff;
-        border: none;
-        border-radius: var(--radius);
-        font-family: inherit;
-        font-size: 0.95rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition:
-          background 0.2s,
-          transform 0.1s;
-        white-space: nowrap;
-      }
-      button.search-btn:hover {
-        background: #b0561f;
-      }
-      button.search-btn:active {
-        transform: scale(0.98);
-      }
-      button.search-btn:disabled {
-        background: #c8a898;
-        cursor: not-allowed;
-      }
-
-      /* ── Filters ─────────────────────────────── */
-      .filters {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 10px;
-        margin-top: 12px;
-      }
-      .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-      .filter-group label {
-        font-size: 0.7rem;
-        font-weight: 500;
-        letter-spacing: 0.6px;
-        text-transform: uppercase;
-        color: var(--muted);
-      }
-      .filter-group input {
-        padding: 10px 12px;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        background: var(--card);
-        font-family: inherit;
-        font-size: 0.88rem;
-        color: var(--ink);
-        outline: none;
-        transition: border-color 0.2s;
-        width: 100%;
-      }
-      .filter-group input:focus {
-        border-color: var(--accent);
-      }
-      .filter-group input::placeholder {
-        color: #bbb;
-      }
-
-      /* ── Enriched query preview ──────────────── */
-      .query-preview {
-        margin-top: 14px;
-        padding: 10px 14px;
-        background: var(--accent-light);
-        border-left: 3px solid var(--accent);
-        border-radius: 6px;
-        font-size: 0.82rem;
-        color: #7a3a18;
-        display: none;
-      }
-      .query-preview.visible {
-        display: block;
-      }
-
-      /* ── Status bar ──────────────────────────── */
-      .status {
-        max-width: 860px;
-        margin: 20px auto 0;
-        padding: 0 24px;
-        font-size: 0.82rem;
-        color: var(--muted);
-        min-height: 20px;
-      }
-      .status .count {
-        color: var(--accent);
-        font-weight: 500;
-      }
-
-      /* ── Results grid ────────────────────────── */
-      .results {
-        max-width: 860px;
-        margin: 16px auto 60px;
-        padding: 0 24px;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 18px;
-      }
-
-      /* ── Property card ───────────────────────── */
-      .card {
-        background: var(--card);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        overflow: hidden;
-        border: 1px solid var(--border);
-        transition:
-          transform 0.2s,
-          box-shadow 0.2s;
-        animation: fadeUp 0.35s ease both;
-      }
-      .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 28px rgba(26, 23, 18, 0.12);
-      }
-
-      @keyframes fadeUp {
-        from {
-          opacity: 0;
-          transform: translateY(14px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .card-img {
-        width: 100%;
-        height: 160px;
-        object-fit: cover;
-        background: #e8e3da;
-        display: block;
-      }
-      .card-img-placeholder {
-        width: 100%;
-        height: 160px;
-        background: linear-gradient(135deg, #e8e3da 0%, #d4cfc6 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .card-img-placeholder svg {
-        opacity: 0.3;
-      }
-
-      .card-body {
-        padding: 16px 18px 18px;
-      }
-      .card-id {
-        font-size: 0.68rem;
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 4px;
-      }
-      .card-title {
-        font-family: "DM Serif Display", serif;
-        font-size: 1.05rem;
-        line-height: 1.3;
-        margin-bottom: 6px;
-      }
-      .card-type {
-        display: inline-block;
-        font-size: 0.68rem;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        background: var(--accent-light);
-        color: var(--accent);
-        padding: 2px 8px;
-        border-radius: 20px;
-        margin-bottom: 10px;
-      }
-      .card-desc {
-        font-size: 0.82rem;
-        color: var(--muted);
-        line-height: 1.55;
-        margin-bottom: 14px;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-      .card-meta {
-        display: flex;
-        gap: 14px;
-        flex-wrap: wrap;
-        font-size: 0.8rem;
-        color: var(--muted);
-        border-top: 1px solid var(--border);
-        padding-top: 12px;
-      }
-      .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .meta-item svg {
-        flex-shrink: 0;
-      }
-      .card-price {
-        font-family: "DM Serif Display", serif;
-        font-size: 1.1rem;
-        color: var(--accent);
-        margin-bottom: 4px;
-      }
-      .card-location {
-        font-size: 0.78rem;
-        color: var(--muted);
-        margin-bottom: 10px;
-      }
-
-      /* ── Loading spinner ─────────────────────── */
-      .spinner {
-        display: none;
-        width: 22px;
-        height: 22px;
-        border: 2.5px solid rgba(255, 255, 255, 0.4);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
-        vertical-align: middle;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      /* ── Empty / error state ─────────────────── */
-      .empty {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--muted);
-      }
-      .empty-icon {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-      }
-
-      @media (max-width: 640px) {
-        header {
-          padding: 20px 20px 16px;
-        }
-        .search-panel,
-        .results,
-        .status {
-          padding: 0 16px;
-        }
-        .filters {
-          grid-template-columns: 1fr 1fr;
-        }
-        .query-row {
-          flex-direction: column;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>RealSearch</h1>
-      <span>Property Intelligence</span>
-    </header>
-
-    <div class="search-panel">
-      <div class="query-row">
-        <input
-          id="queryInput"
-          type="text"
-          placeholder="Describe the property you're looking for…"
-        />
-        <button class="search-btn" id="searchBtn" onclick="runSearch()">
-          <span id="btnText">Search</span>
-          <div class="spinner" id="spinner"></div>
-        </button>
-      </div>
-
-      <div class="filters">
-        <div class="filter-group">
-          <label>Min Price</label>
-          <input
-            id="priceMin"
-            type="number"
-            placeholder="e.g. 200000"
-            min="0"
-          />
-        </div>
-        <div class="filter-group">
-          <label>Max Price</label>
-          <input
-            id="priceMax"
-            type="number"
-            placeholder="e.g. 800000"
-            min="0"
-          />
-        </div>
-        <div class="filter-group">
-          <label>Bedrooms</label>
-          <input id="bedrooms" type="number" placeholder="e.g. 3" min="0" />
-        </div>
-        <div class="filter-group">
-          <label>Bathrooms</label>
-          <input id="bathrooms" type="number" placeholder="e.g. 2" min="0" />
-        </div>
-        <div class="filter-group">
-          <label>Area (sq ft)</label>
-          <input id="area" type="number" placeholder="e.g. 1500" min="0" />
-        </div>
-      </div>
-
-      <div class="query-preview" id="queryPreview"></div>
-    </div>
-
-    <div class="status" id="status"></div>
-    <div class="results" id="results"></div>
-
-    <script>
-      // Live preview of enriched query
-      const PREVIEW_FIELDS = [
-        "priceMin",
-        "priceMax",
-        "bedrooms",
-        "bathrooms",
-        "area",
-      ];
-      PREVIEW_FIELDS.forEach((id) => {
-        document.getElementById(id).addEventListener("input", updatePreview);
-      });
-      document
-        .getElementById("queryInput")
-        .addEventListener("input", updatePreview);
-      document.getElementById("queryInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") runSearch();
-      });
-
-      function buildEnrichedQuery() {
-        const q = document.getElementById("queryInput").value.trim();
-        if (!q) return "";
-        const parts = [q];
-        const pMin = document.getElementById("priceMin").value;
-        const pMax = document.getElementById("priceMax").value;
-        const beds = document.getElementById("bedrooms").value;
-        const baths = document.getElementById("bathrooms").value;
-        const area = document.getElementById("area").value;
-
-        if (pMin && pMax)
-          parts.push(
-            `The price should be between ${Number(pMin).toLocaleString()} and ${Number(pMax).toLocaleString()}.`,
-          );
-        else if (pMin)
-          parts.push(
-            `The price should be at least ${Number(pMin).toLocaleString()}.`,
-          );
-        else if (pMax)
-          parts.push(
-            `The price should be at most ${Number(pMax).toLocaleString()}.`,
-          );
-        if (beds) parts.push(`It should have ${beds} bedroom(s).`);
-        if (baths) parts.push(`It should have ${baths} bathroom(s).`);
-        if (area)
-          parts.push(
-            `The area should be around ${Number(area).toLocaleString()} square feet.`,
-          );
-        return parts.join(" ");
-      }
-
-      function updatePreview() {
-        const preview = document.getElementById("queryPreview");
-        const enriched = buildEnrichedQuery();
-        if (
-          enriched &&
-          enriched !== document.getElementById("queryInput").value.trim()
-        ) {
-          preview.textContent = "📝 " + enriched;
-          preview.classList.add("visible");
-        } else {
-          preview.classList.remove("visible");
-        }
-      }
-
-      async function runSearch() {
-        const query = document.getElementById("queryInput").value.trim();
-        if (!query) {
-          document.getElementById("queryInput").focus();
-          return;
-        }
-
-        const btn = document.getElementById("searchBtn");
-        const spinner = document.getElementById("spinner");
-        const btnText = document.getElementById("btnText");
-        const status = document.getElementById("status");
-        const resultsEl = document.getElementById("results");
-
-        btn.disabled = true;
-        btnText.textContent = "Searching";
-        spinner.style.display = "inline-block";
-        status.innerHTML = "Running semantic search…";
-        resultsEl.innerHTML = "";
-
-        const payload = {
-          query,
-          price_min: document.getElementById("priceMin").value
-            ? Number(document.getElementById("priceMin").value)
-            : null,
-          price_max: document.getElementById("priceMax").value
-            ? Number(document.getElementById("priceMax").value)
-            : null,
-          bedrooms: document.getElementById("bedrooms").value
-            ? Number(document.getElementById("bedrooms").value)
-            : null,
-          bathrooms: document.getElementById("bathrooms").value
-            ? Number(document.getElementById("bathrooms").value)
-            : null,
-          area: document.getElementById("area").value
-            ? Number(document.getElementById("area").value)
-            : null,
-        };
-
-        try {
-          const res = await fetch("/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            const err = await res
-              .json()
-              .catch(() => ({ detail: res.statusText }));
-            throw new Error(err.detail || res.statusText);
-          }
-          const data = await res.json();
-          renderResults(data);
-        } catch (err) {
-          status.innerHTML = `<span style="color:#c0392b">Error: ${err.message}</span>`;
-        } finally {
-          btn.disabled = false;
-          btnText.textContent = "Search";
-          spinner.style.display = "none";
-        }
-      }
-
-      function renderResults(data) {
-        const status = document.getElementById("status");
-        const resultsEl = document.getElementById("results");
-
-        const count = data.count ?? data.results?.length ?? 0;
-        status.innerHTML = count
-          ? `Showing <span class="count">${count}</span> properties`
-          : "No properties found for your query.";
-
-        if (!data.results || data.results.length === 0) {
-          resultsEl.innerHTML = `
-        <div class="empty">
-          <div class="empty-icon">🏚️</div>
-          <div>No matching properties found. Try adjusting your filters.</div>
-        </div>`;
-          return;
-        }
-
-        resultsEl.innerHTML = data.results
-          .map((p, i) => cardHTML(p, i))
-          .join("");
-      }
-
-      function cardHTML(p, i) {
-        const delay = `animation-delay: ${i * 0.04}s`;
-        const img = p.image_url
-          ? `<img class="card-img" src="${esc(p.image_url)}" alt="${esc(p.title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-img-placeholder" style="display:none">${houseSVG()}</div>`
-          : `<div class="card-img-placeholder">${houseSVG()}</div>`;
-
-        const price =
-          p.price != null
-            ? `<div class="card-price">${formatPrice(p.price)}</div>`
-            : "";
-
-        const location = p.location
-          ? `<div class="card-location">📍 ${esc(p.location)}</div>`
-          : "";
-
-        const type = p.property_type
-          ? `<span class="card-type">${esc(p.property_type)}</span>`
-          : "";
-
-        const desc = p.description
-          ? `<div class="card-desc">${esc(p.description)}</div>`
-          : "";
-
-        const metaParts = [];
-        if (p.bedrooms != null)
-          metaParts.push(
-            `<span class="meta-item">${bedSVG()} ${p.bedrooms} bed</span>`,
-          );
-        if (p.bathrooms != null)
-          metaParts.push(
-            `<span class="meta-item">${bathSVG()} ${p.bathrooms} bath</span>`,
-          );
-        if (p.area != null)
-          metaParts.push(
-            `<span class="meta-item">${areaSVG()} ${Number(p.area).toLocaleString()} sq ft</span>`,
-          );
-        const meta = metaParts.length
-          ? `<div class="card-meta">${metaParts.join("")}</div>`
-          : "";
-
-        return `
-      <div class="card" style="${delay}">
-        ${img}
-        <div class="card-body">
-          <div class="card-id">ID: ${esc(String(p.property_id))}</div>
-          <div class="card-title">${esc(p.title || "Untitled Property")}</div>
-          ${type}
-          ${price}
-          ${location}
-          ${desc}
-          ${meta}
-        </div>
-      </div>`;
-      }
-
-      function formatPrice(v) {
-        if (!v) return "";
-        return "LKR" + Number(v).toLocaleString();
-      }
-
-      function esc(str) {
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-      }
-
-      function houseSVG() {
-        return `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#7a756c" stroke-width="1.5"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>`;
-      }
-      function bedSVG() {
-        return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9V19M22 9V19M2 14h20M2 9a5 5 0 015-5h10a5 5 0 015 5"/></svg>`;
-      }
-      function bathSVG() {
-        return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16v4a4 4 0 01-4 4H8a4 4 0 01-4-4v-4z"/><path d="M6 12V5a2 2 0 012-2h1"/></svg>`;
-      }
-      function areaSVG() {
-        return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>`;
-      }
-    </script>
-  </body>
-</html> -->
-
 <!doctype html>
 <html lang="en">
   <head>
@@ -699,7 +60,7 @@
 
       /* ── Search panel ────────────────────────── */
       .search-panel {
-        max-width: 860px;
+        max-width: 960px;
         margin: 36px auto 0;
         padding: 0 24px;
       }
@@ -734,26 +95,17 @@
         font-size: 0.95rem;
         font-weight: 500;
         cursor: pointer;
-        transition:
-          background 0.2s,
-          transform 0.1s;
+        transition: background 0.2s, transform 0.1s;
         white-space: nowrap;
       }
-      button.search-btn:hover {
-        background: #b0561f;
-      }
-      button.search-btn:active {
-        transform: scale(0.98);
-      }
-      button.search-btn:disabled {
-        background: #c8a898;
-        cursor: not-allowed;
-      }
+      button.search-btn:hover { background: #b0561f; }
+      button.search-btn:active { transform: scale(0.98); }
+      button.search-btn:disabled { background: #c8a898; cursor: not-allowed; }
 
-      /* ── Filters ─────────────────────────────── */
+      /* ── Filters — 6 columns (location + 5 existing) ── */
       .filters {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: 1.4fr repeat(5, 1fr); /* location slightly wider */
         gap: 10px;
         margin-top: 12px;
       }
@@ -781,12 +133,8 @@
         transition: border-color 0.2s;
         width: 100%;
       }
-      .filter-group input:focus {
-        border-color: var(--accent);
-      }
-      .filter-group input::placeholder {
-        color: #bbb;
-      }
+      .filter-group input:focus { border-color: var(--accent); }
+      .filter-group input::placeholder { color: #bbb; }
 
       /* ── Enriched query preview ──────────────── */
       .query-preview {
@@ -799,22 +147,18 @@
         color: #7a3a18;
         display: none;
       }
-      .query-preview.visible {
-        display: block;
-      }
+      .query-preview.visible { display: block; }
 
       /* ── Explain All bar ─────────────────────── */
       .explain-bar {
-        max-width: 860px;
+        max-width: 960px;
         margin: 16px auto 0;
         padding: 0 24px;
         display: none;
         align-items: center;
         gap: 12px;
       }
-      .explain-bar.visible {
-        display: flex;
-      }
+      .explain-bar.visible { display: flex; }
 
       button.explain-all-btn {
         display: flex;
@@ -829,18 +173,10 @@
         font-size: 0.85rem;
         font-weight: 500;
         cursor: pointer;
-        transition:
-          background 0.2s,
-          color 0.2s;
+        transition: background 0.2s, color 0.2s;
       }
-      button.explain-all-btn:hover {
-        background: var(--accent);
-        color: #fff;
-      }
-      button.explain-all-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
+      button.explain-all-btn:hover { background: var(--accent); color: #fff; }
+      button.explain-all-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
       .explain-bar-status {
         font-size: 0.8rem;
@@ -853,21 +189,18 @@
 
       /* ── Status bar ──────────────────────────── */
       .status {
-        max-width: 860px;
+        max-width: 960px;
         margin: 12px auto 0;
         padding: 0 24px;
         font-size: 0.82rem;
         color: var(--muted);
         min-height: 20px;
       }
-      .status .count {
-        color: var(--accent);
-        font-weight: 500;
-      }
+      .status .count { color: var(--accent); font-weight: 500; }
 
       /* ── Results grid ────────────────────────── */
       .results {
-        max-width: 860px;
+        max-width: 960px;
         margin: 16px auto 60px;
         padding: 0 24px;
         display: grid;
@@ -882,9 +215,7 @@
         box-shadow: var(--shadow);
         overflow: hidden;
         border: 1px solid var(--border);
-        transition:
-          transform 0.2s,
-          box-shadow 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
         animation: fadeUp 0.35s ease both;
         display: flex;
         flex-direction: column;
@@ -895,14 +226,8 @@
       }
 
       @keyframes fadeUp {
-        from {
-          opacity: 0;
-          transform: translateY(14px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
       }
 
       .card-img {
@@ -920,9 +245,7 @@
         align-items: center;
         justify-content: center;
       }
-      .card-img-placeholder svg {
-        opacity: 0.3;
-      }
+      .card-img-placeholder svg { opacity: 0.3; }
 
       .card-body {
         padding: 16px 18px 14px;
@@ -980,9 +303,7 @@
         align-items: center;
         gap: 4px;
       }
-      .meta-item svg {
-        flex-shrink: 0;
-      }
+      .meta-item svg { flex-shrink: 0; }
       .card-price {
         font-family: "DM Serif Display", serif;
         font-size: 1.1rem;
@@ -996,9 +317,7 @@
       }
 
       /* ── Explain button (per card) ───────────── */
-      .card-explain-section {
-        padding: 0 18px 14px;
-      }
+      .card-explain-section { padding: 0 18px 14px; }
 
       button.explain-btn {
         display: flex;
@@ -1022,19 +341,14 @@
         color: var(--accent);
         background: var(--accent-light);
       }
-      button.explain-btn:disabled {
-        opacity: 0.5;
-        cursor: default;
-      }
+      button.explain-btn:disabled { opacity: 0.5; cursor: default; }
       button.explain-btn.loading {
         color: var(--accent);
         border-color: var(--accent-light);
         background: var(--accent-light);
         cursor: wait;
       }
-      button.explain-btn.done {
-        display: none;
-      }
+      button.explain-btn.done { display: none; }
 
       /* ── Explanation panel (per card) ────────── */
       .explanation-panel {
@@ -1049,9 +363,7 @@
         line-height: 1.65;
         animation: fadeUp 0.3s ease;
       }
-      .explanation-panel.visible {
-        display: block;
-      }
+      .explanation-panel.visible { display: block; }
 
       .explanation-panel .explain-header {
         display: flex;
@@ -1064,70 +376,39 @@
         text-transform: uppercase;
         color: var(--accent);
       }
-      .explanation-panel .explain-text {
-        color: #3d3830;
-        line-height: 1.65;
-      }
-      .explanation-panel .explain-error {
-        color: #c0392b;
-        font-style: italic;
-      }
+      .explanation-panel .explain-text { color: #3d3830; line-height: 1.65; }
+      .explanation-panel .explain-error { color: #c0392b; font-style: italic; }
 
       /* ── Explanation loading pulse ───────────── */
-      .explain-skeleton {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
+      .explain-skeleton { display: flex; flex-direction: column; gap: 6px; }
       .explain-skeleton .skel-line {
         height: 10px;
-        background: linear-gradient(
-          90deg,
-          #ede8e1 25%,
-          #e0d9d0 50%,
-          #ede8e1 75%
-        );
+        background: linear-gradient(90deg, #ede8e1 25%, #e0d9d0 50%, #ede8e1 75%);
         background-size: 200% 100%;
         border-radius: 4px;
         animation: shimmer 1.4s infinite;
       }
-      .explain-skeleton .skel-line:nth-child(2) {
-        width: 90%;
-        animation-delay: 0.1s;
-      }
-      .explain-skeleton .skel-line:nth-child(3) {
-        width: 75%;
-        animation-delay: 0.2s;
-      }
+      .explain-skeleton .skel-line:nth-child(2) { width: 90%; animation-delay: 0.1s; }
+      .explain-skeleton .skel-line:nth-child(3) { width: 75%; animation-delay: 0.2s; }
       @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
+        0%   { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
       }
 
       /* ── Loading spinner ─────────────────────── */
       .spinner {
         display: none;
-        width: 22px;
-        height: 22px;
+        width: 22px; height: 22px;
         border: 2.5px solid rgba(255, 255, 255, 0.4);
         border-top-color: #fff;
         border-radius: 50%;
         animation: spin 0.7s linear infinite;
         vertical-align: middle;
       }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
+      @keyframes spin { to { transform: rotate(360deg); } }
 
       .mini-spinner {
-        width: 12px;
-        height: 12px;
+        width: 12px; height: 12px;
         border: 2px solid rgba(200, 98, 42, 0.3);
         border-top-color: var(--accent);
         border-radius: 50%;
@@ -1142,27 +423,13 @@
         padding: 60px 20px;
         color: var(--muted);
       }
-      .empty-icon {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-      }
+      .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
 
-      @media (max-width: 640px) {
-        header {
-          padding: 20px 20px 16px;
-        }
-        .search-panel,
-        .results,
-        .status,
-        .explain-bar {
-          padding: 0 16px;
-        }
-        .filters {
-          grid-template-columns: 1fr 1fr;
-        }
-        .query-row {
-          flex-direction: column;
-        }
+      @media (max-width: 700px) {
+        header { padding: 20px 20px 16px; }
+        .search-panel, .results, .status, .explain-bar { padding: 0 16px; }
+        .filters { grid-template-columns: 1fr 1fr; }
+        .query-row { flex-direction: column; }
       }
     </style>
   </head>
@@ -1185,24 +452,19 @@
         </button>
       </div>
 
+      <!-- ── Filters: Location (new) + 5 existing ── -->
       <div class="filters">
         <div class="filter-group">
+          <label>Location</label>
+          <input id="location" type="text" placeholder="e.g. Colombo" />
+        </div>
+        <div class="filter-group">
           <label>Min Price</label>
-          <input
-            id="priceMin"
-            type="number"
-            placeholder="e.g. 200000"
-            min="0"
-          />
+          <input id="priceMin" type="number" placeholder="e.g. 200000" min="0" />
         </div>
         <div class="filter-group">
           <label>Max Price</label>
-          <input
-            id="priceMax"
-            type="number"
-            placeholder="e.g. 800000"
-            min="0"
-          />
+          <input id="priceMax" type="number" placeholder="e.g. 800000" min="0" />
         </div>
         <div class="filter-group">
           <label>Bedrooms</label>
@@ -1224,16 +486,8 @@
     <!-- Explain All bar — shown after search results load -->
     <div class="explain-bar" id="explainBar">
       <button class="explain-all-btn" id="explainAllBtn" onclick="explainAll()">
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 16v-4M12 8h.01" />
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
         </svg>
         Explain All Matches
       </button>
@@ -1251,19 +505,12 @@
       let pollTimer = null;
 
       // ── Live preview ───────────────────────────────────────────────────────────
-      const PREVIEW_FIELDS = [
-        "priceMin",
-        "priceMax",
-        "bedrooms",
-        "bathrooms",
-        "area",
-      ];
+      // location added to PREVIEW_FIELDS
+      const PREVIEW_FIELDS = ["location", "priceMin", "priceMax", "bedrooms", "bathrooms", "area"];
       PREVIEW_FIELDS.forEach((id) =>
-        document.getElementById(id).addEventListener("input", updatePreview),
+        document.getElementById(id).addEventListener("input", updatePreview)
       );
-      document
-        .getElementById("queryInput")
-        .addEventListener("input", updatePreview);
+      document.getElementById("queryInput").addEventListener("input", updatePreview);
       document.getElementById("queryInput").addEventListener("keydown", (e) => {
         if (e.key === "Enter") runSearch();
       });
@@ -1272,39 +519,28 @@
         const q = document.getElementById("queryInput").value.trim();
         if (!q) return "";
         const parts = [q];
-        const pMin = document.getElementById("priceMin").value;
-        const pMax = document.getElementById("priceMax").value;
-        const beds = document.getElementById("bedrooms").value;
+        const loc   = document.getElementById("location").value.trim();
+        const pMin  = document.getElementById("priceMin").value;
+        const pMax  = document.getElementById("priceMax").value;
+        const beds  = document.getElementById("bedrooms").value;
         const baths = document.getElementById("bathrooms").value;
-        const area = document.getElementById("area").value;
+        const area  = document.getElementById("area").value;
+
+        if (loc)  parts.push(`It should be located in ${loc}.`);
         if (pMin && pMax)
-          parts.push(
-            `The price should be between ${Number(pMin).toLocaleString()} and ${Number(pMax).toLocaleString()}.`,
-          );
-        else if (pMin)
-          parts.push(
-            `The price should be at least ${Number(pMin).toLocaleString()}.`,
-          );
-        else if (pMax)
-          parts.push(
-            `The price should be at most ${Number(pMax).toLocaleString()}.`,
-          );
-        if (beds) parts.push(`It should have ${beds} bedroom(s).`);
+          parts.push(`The price should be between ${Number(pMin).toLocaleString()} and ${Number(pMax).toLocaleString()}.`);
+        else if (pMin) parts.push(`The price should be at least ${Number(pMin).toLocaleString()}.`);
+        else if (pMax) parts.push(`The price should be at most ${Number(pMax).toLocaleString()}.`);
+        if (beds)  parts.push(`It should have ${beds} bedroom(s).`);
         if (baths) parts.push(`It should have ${baths} bathroom(s).`);
-        if (area)
-          parts.push(
-            `The area should be around ${Number(area).toLocaleString()} square feet.`,
-          );
+        if (area)  parts.push(`The area should be around ${Number(area).toLocaleString()} square feet.`);
         return parts.join(" ");
       }
 
       function updatePreview() {
         const preview = document.getElementById("queryPreview");
         const enriched = buildEnrichedQuery();
-        if (
-          enriched &&
-          enriched !== document.getElementById("queryInput").value.trim()
-        ) {
+        if (enriched && enriched !== document.getElementById("queryInput").value.trim()) {
           preview.textContent = "📝 " + enriched;
           preview.classList.add("visible");
         } else {
@@ -1315,22 +551,15 @@
       // ── Search ─────────────────────────────────────────────────────────────────
       async function runSearch() {
         const query = document.getElementById("queryInput").value.trim();
-        if (!query) {
-          document.getElementById("queryInput").focus();
-          return;
-        }
+        if (!query) { document.getElementById("queryInput").focus(); return; }
 
-        // Cancel any running explanation poll
-        if (pollTimer) {
-          clearInterval(pollTimer);
-          pollTimer = null;
-        }
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
         activeJobId = null;
 
-        const btn = document.getElementById("searchBtn");
-        const spinner = document.getElementById("spinner");
-        const btnText = document.getElementById("btnText");
-        const status = document.getElementById("status");
+        const btn       = document.getElementById("searchBtn");
+        const spinner   = document.getElementById("spinner");
+        const btnText   = document.getElementById("btnText");
+        const status    = document.getElementById("status");
         const resultsEl = document.getElementById("results");
         const explainBar = document.getElementById("explainBar");
 
@@ -1342,23 +571,15 @@
         explainBar.classList.remove("visible");
         document.getElementById("explainBarStatus").textContent = "";
 
+        // location added to payload
         const payload = {
           query,
-          price_min: document.getElementById("priceMin").value
-            ? Number(document.getElementById("priceMin").value)
-            : null,
-          price_max: document.getElementById("priceMax").value
-            ? Number(document.getElementById("priceMax").value)
-            : null,
-          bedrooms: document.getElementById("bedrooms").value
-            ? Number(document.getElementById("bedrooms").value)
-            : null,
-          bathrooms: document.getElementById("bathrooms").value
-            ? Number(document.getElementById("bathrooms").value)
-            : null,
-          area: document.getElementById("area").value
-            ? Number(document.getElementById("area").value)
-            : null,
+          location:  document.getElementById("location").value.trim() || null,
+          price_min: document.getElementById("priceMin").value  ? Number(document.getElementById("priceMin").value)  : null,
+          price_max: document.getElementById("priceMax").value  ? Number(document.getElementById("priceMax").value)  : null,
+          bedrooms:  document.getElementById("bedrooms").value  ? Number(document.getElementById("bedrooms").value)  : null,
+          bathrooms: document.getElementById("bathrooms").value ? Number(document.getElementById("bathrooms").value) : null,
+          area:      document.getElementById("area").value      ? Number(document.getElementById("area").value)      : null,
         };
 
         try {
@@ -1368,9 +589,7 @@
             body: JSON.stringify(payload),
           });
           if (!res.ok) {
-            const err = await res
-              .json()
-              .catch(() => ({ detail: res.statusText }));
+            const err = await res.json().catch(() => ({ detail: res.statusText }));
             throw new Error(err.detail || res.statusText);
           }
           const data = await res.json();
@@ -1388,9 +607,9 @@
 
       // ── Render results ─────────────────────────────────────────────────────────
       function renderResults(data) {
-        const status = document.getElementById("status");
-        const resultsEl = document.getElementById("results");
-        const explainBar = document.getElementById("explainBar");
+        const status      = document.getElementById("status");
+        const resultsEl   = document.getElementById("results");
+        const explainBar  = document.getElementById("explainBar");
         const explainAllBtn = document.getElementById("explainAllBtn");
 
         const count = data.count ?? data.results?.length ?? 0;
@@ -1400,40 +619,38 @@
 
         if (!data.results || data.results.length === 0) {
           resultsEl.innerHTML = `
-        <div class="empty">
-          <div class="empty-icon">🏚️</div>
-          <div>No matching properties found. Try adjusting your filters.</div>
-        </div>`;
+            <div class="empty">
+              <div class="empty-icon">🏚️</div>
+              <div>No matching properties found. Try adjusting your filters.</div>
+            </div>`;
           return;
         }
 
-        resultsEl.innerHTML = data.results
-          .map((p, i) => cardHTML(p, i))
-          .join("");
-        loadImagesForResults(data.results); // async — fills in Unsplash images
+        resultsEl.innerHTML = data.results.map((p, i) => cardHTML(p, i)).join("");
+        loadImagesForResults(data.results);
         explainBar.classList.add("visible");
         explainAllBtn.disabled = false;
         explainAllBtn.innerHTML = `
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-      </svg>
-      Explain All Matches`;
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+          </svg>
+          Explain All Matches`;
       }
 
-      // ── Unsplash API image fetch ───────────────────────────────────────────────
+      // ── Unsplash image fetch ───────────────────────────────────────────────────
       const UNSPLASH_KEY = "HSVLYBdM6Z8w_ABA4dX5Sw1ExmzYU5TWmOeGYDpph7c";
-      const unsplashCache = {}; // property_id -> image url
+      const unsplashCache = {};
 
       const TYPE_QUERIES = {
-        villa: "luxury villa house",
-        house: "house home residential",
-        apartment: "apartment building interior",
-        condo: "condominium apartment modern",
-        land: "land plot property",
-        commercial: "commercial building",
-        warehouse: "warehouse industrial",
-        office: "office building",
-        townhouse: "townhouse residential",
+        villa:       "luxury villa house",
+        house:       "house home residential",
+        apartment:   "apartment building interior",
+        condo:       "condominium apartment modern",
+        land:        "land plot property",
+        commercial:  "commercial building",
+        warehouse:   "warehouse industrial",
+        office:      "office building",
+        townhouse:   "townhouse residential",
       };
 
       function getUnsplashQuery(p) {
@@ -1448,95 +665,73 @@
         const pid = String(p.property_id);
         if (unsplashCache[pid]) return unsplashCache[pid];
         const query = encodeURIComponent(getUnsplashQuery(p));
-        const page = (parseInt(pid) % 10) + 1; // vary results per property
-        const url = `https://api.unsplash.com/search/photos?query=${query}&per_page=1&page=${page}&orientation=landscape&client_id=${UNSPLASH_KEY}`;
+        const page  = (parseInt(pid) % 10) + 1;
+        const url   = `https://api.unsplash.com/search/photos?query=${query}&per_page=1&page=${page}&orientation=landscape&client_id=${UNSPLASH_KEY}`;
         try {
-          const res = await fetch(url);
+          const res  = await fetch(url);
           const data = await res.json();
           const imgUrl = data.results?.[0]?.urls?.regular || null;
           if (imgUrl) unsplashCache[pid] = imgUrl;
           return imgUrl;
-        } catch {
-          return null;
-        }
+        } catch { return null; }
       }
 
       // ── Card HTML ──────────────────────────────────────────────────────────────
       function cardHTML(p, i) {
-        const delay = `animation-delay: ${i * 0.04}s`;
-        // Start with placeholder; swap in real image once fetched
+        const delay  = `animation-delay: ${i * 0.04}s`;
         const imgSrc = p.image_url || "";
-        const img = imgSrc
+        const img    = imgSrc
           ? `<img class="card-img" src="${esc(imgSrc)}" alt="${esc(p.title)}"
-           onerror="loadUnsplashForCard(this, '${esc(String(p.property_id))}')" />`
+               onerror="loadUnsplashForCard(this, '${esc(String(p.property_id))}')" />`
           : `<img class="card-img" id="img-${esc(String(p.property_id))}" src="" alt="${esc(p.title)}"
-           style="background:#e8e3da" />`;
+               style="background:#e8e3da" />`;
 
-        const price =
-          p.price != null
-            ? `<div class="card-price">${formatPrice(p.price)}</div>`
-            : "";
+        const price = p.price != null
+          ? `<div class="card-price">${formatPrice(p.price)}</div>` : "";
 
         const location = p.location
-          ? `<div class="card-location">📍 ${esc(p.location)}</div>`
-          : "";
+          ? `<div class="card-location">📍 ${esc(p.location)}</div>` : "";
 
         const type = p.property_type
-          ? `<span class="card-type">${esc(p.property_type)}</span>`
-          : "";
+          ? `<span class="card-type">${esc(p.property_type)}</span>` : "";
 
         const desc = p.description
-          ? `<div class="card-desc">${esc(p.description)}</div>`
-          : "";
+          ? `<div class="card-desc">${esc(p.description)}</div>` : "";
 
         const metaParts = [];
-        if (p.bedrooms != null)
-          metaParts.push(
-            `<span class="meta-item">${bedSVG()} ${p.bedrooms} bed</span>`,
-          );
-        if (p.bathrooms != null)
-          metaParts.push(
-            `<span class="meta-item">${bathSVG()} ${p.bathrooms} bath</span>`,
-          );
-        if (p.floor_area_sqft != null)
-          metaParts.push(
-            `<span class="meta-item">${areaSVG()} ${Number(p.floor_area_sqft).toLocaleString()} sq ft</span>`,
-          );
-        const meta = metaParts.length
-          ? `<div class="card-meta">${metaParts.join("")}</div>`
-          : "";
+        if (p.bedrooms != null)       metaParts.push(`<span class="meta-item">${bedSVG()} ${p.bedrooms} bed</span>`);
+        if (p.bathrooms != null)      metaParts.push(`<span class="meta-item">${bathSVG()} ${p.bathrooms} bath</span>`);
+        if (p.floor_area_sqft != null) metaParts.push(`<span class="meta-item">${areaSVG()} ${Number(p.floor_area_sqft).toLocaleString()} sq ft</span>`);
+        const meta = metaParts.length ? `<div class="card-meta">${metaParts.join("")}</div>` : "";
 
         const pid = esc(String(p.property_id));
 
         return `
-      <div class="card" style="${delay}" id="card-${pid}">
-        ${img}
-        <div class="card-body">
-          <div class="card-id">ID: ${pid}</div>
-          <div class="card-title">${esc(p.title || "Untitled Property")}</div>
-          ${type}
-          ${price}
-          ${location}
-          ${desc}
-          ${meta}
-        </div>
-        <!-- Explain button -->
-        <div class="card-explain-section">
-          <button class="explain-btn" id="explain-btn-${pid}"
-                  onclick="explainOne('${pid}')">
-            ${sparkSVG()}
-            Why does this match?
-          </button>
-        </div>
-        <!-- Explanation output -->
-        <div class="explanation-panel" id="explain-panel-${pid}"></div>
-      </div>`;
+        <div class="card" style="${delay}" id="card-${pid}">
+          ${img}
+          <div class="card-body">
+            <div class="card-id">ID: ${pid}</div>
+            <div class="card-title">${esc(p.title || "Untitled Property")}</div>
+            ${type}
+            ${price}
+            ${location}
+            ${desc}
+            ${meta}
+          </div>
+          <div class="card-explain-section">
+            <button class="explain-btn" id="explain-btn-${pid}" onclick="explainOne('${pid}')">
+              ${sparkSVG()}
+              Why does this match?
+            </button>
+          </div>
+          <div class="explanation-panel" id="explain-panel-${pid}"></div>
+        </div>`;
       }
 
-      // ── Explain ONE property (individual button) ───────────────────────────────
+      // ── Explain ONE property ───────────────────────────────────────────────────
       async function explainOne(propertyId) {
         if (!currentQuery) return;
-        const btn = document.getElementById(`explain-btn-${propertyId}`);
+        const btn   = document.getElementById(`explain-btn-${propertyId}`);
         const panel = document.getElementById(`explain-panel-${propertyId}`);
 
         btn.classList.add("loading");
@@ -1545,36 +740,30 @@
 
         panel.classList.add("visible");
         panel.innerHTML = `
-      <div class="explain-header">${sparkSVG(14)} Why this matches</div>
-      <div class="explain-skeleton">
-        <div class="skel-line"></div>
-        <div class="skel-line"></div>
-        <div class="skel-line"></div>
-      </div>`;
+          <div class="explain-header">${sparkSVG(14)} Why this matches</div>
+          <div class="explain-skeleton">
+            <div class="skel-line"></div>
+            <div class="skel-line"></div>
+            <div class="skel-line"></div>
+          </div>`;
 
         try {
           const res = await fetch("/explain", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              query: currentQuery,
-              property_ids: [propertyId],
-            }),
+            body: JSON.stringify({ query: currentQuery, property_ids: [propertyId] }),
           });
           if (!res.ok) throw new Error(await res.text());
           const { job_id } = await res.json();
 
-          // Poll this single-property job
           await pollJobUntilDone(job_id, (results) => {
-            const item = results.find(
-              (r) => String(r.property_id) === String(propertyId),
-            );
+            const item = results.find((r) => String(r.property_id) === String(propertyId));
             if (item) renderExplanationInPanel(panel, item);
           });
         } catch (err) {
           panel.innerHTML = `
-        <div class="explain-header">${sparkSVG(14)} Why this matches</div>
-        <div class="explain-error">Could not generate explanation: ${esc(err.message)}</div>`;
+            <div class="explain-header">${sparkSVG(14)} Why this matches</div>
+            <div class="explain-error">Could not generate explanation: ${esc(err.message)}</div>`;
         } finally {
           btn.classList.remove("loading");
           btn.classList.add("done");
@@ -1585,13 +774,9 @@
       async function explainAll() {
         if (!currentQuery || currentResults.length === 0) return;
         const explainAllBtn = document.getElementById("explainAllBtn");
-        const barStatus = document.getElementById("explainBarStatus");
+        const barStatus     = document.getElementById("explainBarStatus");
 
-        // Cancel previous job poll if any
-        if (pollTimer) {
-          clearInterval(pollTimer);
-          pollTimer = null;
-        }
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 
         const ids = currentResults.map((p) => String(p.property_id));
 
@@ -1599,9 +784,8 @@
         explainAllBtn.innerHTML = `<div class="mini-spinner"></div> Generating explanations…`;
         barStatus.innerHTML = `Analysing <span class="done-count">0</span> / ${ids.length} properties…`;
 
-        // Show skeleton on all cards that haven't been explained yet
         ids.forEach((pid) => {
-          const btn = document.getElementById(`explain-btn-${pid}`);
+          const btn   = document.getElementById(`explain-btn-${pid}`);
           const panel = document.getElementById(`explain-panel-${pid}`);
           if (!btn || btn.classList.contains("done")) return;
           btn.classList.add("loading");
@@ -1609,12 +793,12 @@
           btn.innerHTML = `<div class="mini-spinner"></div> Generating explanation…`;
           panel.classList.add("visible");
           panel.innerHTML = `
-        <div class="explain-header">${sparkSVG(14)} Why this matches</div>
-        <div class="explain-skeleton">
-          <div class="skel-line"></div>
-          <div class="skel-line"></div>
-          <div class="skel-line"></div>
-        </div>`;
+            <div class="explain-header">${sparkSVG(14)} Why this matches</div>
+            <div class="explain-skeleton">
+              <div class="skel-line"></div>
+              <div class="skel-line"></div>
+              <div class="skel-line"></div>
+            </div>`;
         });
 
         try {
@@ -1633,51 +817,42 @@
             barStatus.innerHTML = `Analysing <span class="done-count">${doneCount}</span> / ${ids.length} properties…`;
 
             results.forEach((item) => {
-              const panel = document.getElementById(
-                `explain-panel-${item.property_id}`,
-              );
-              const btn = document.getElementById(
-                `explain-btn-${item.property_id}`,
-              );
+              const panel = document.getElementById(`explain-panel-${item.property_id}`);
+              const btn   = document.getElementById(`explain-btn-${item.property_id}`);
               if (panel && (item.explanation || item.error)) {
                 renderExplanationInPanel(panel, item);
-                if (btn) {
-                  btn.classList.remove("loading");
-                  btn.classList.add("done");
-                }
+                if (btn) { btn.classList.remove("loading"); btn.classList.add("done"); }
               }
             });
           });
 
           barStatus.innerHTML = `<span class="done-count">${ids.length}</span> explanations ready`;
           explainAllBtn.innerHTML = `
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        All Explained`;
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            All Explained`;
         } catch (err) {
           barStatus.textContent = `Error: ${err.message}`;
           explainAllBtn.disabled = false;
           explainAllBtn.innerHTML = `
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-        </svg>
-        Retry Explain All`;
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+            </svg>
+            Retry Explain All`;
         }
       }
 
-      // ── Poll a job until done, calling onProgress each tick ───────────────────
+      // ── Poll a job until done ──────────────────────────────────────────────────
       function pollJobUntilDone(jobId, onProgress) {
         return new Promise((resolve, reject) => {
           const interval = setInterval(async () => {
             try {
-              const r = await fetch(`/explain/${jobId}`);
+              const r   = await fetch(`/explain/${jobId}`);
               if (!r.ok) throw new Error(`Poll failed: ${r.status}`);
               const job = await r.json();
 
-              if (job.results && job.results.length > 0) {
-                onProgress(job.results);
-              }
+              if (job.results && job.results.length > 0) onProgress(job.results);
 
               if (job.status === "done") {
                 clearInterval(interval);
@@ -1686,12 +861,11 @@
                 clearInterval(interval);
                 reject(new Error(job.error || "Explanation job failed"));
               }
-              // status === 'pending' → keep polling
             } catch (e) {
               clearInterval(interval);
               reject(e);
             }
-          }, 1500); // poll every 1.5 s
+          }, 1500);
         });
       }
 
@@ -1699,12 +873,30 @@
       function renderExplanationInPanel(panel, item) {
         if (item.explanation) {
           panel.innerHTML = `
-        <div class="explain-header">${sparkSVG(14)} Why this matches</div>
-        <div class="explain-text">${esc(item.explanation)}</div>`;
+            <div class="explain-header">${sparkSVG(14)} Why this matches</div>
+            <div class="explain-text">${esc(item.explanation)}</div>`;
         } else {
           panel.innerHTML = `
-        <div class="explain-header">${sparkSVG(14)} Why this matches</div>
-        <div class="explain-error">No explanation available${item.error ? ": " + esc(item.error) : "."}</div>`;
+            <div class="explain-header">${sparkSVG(14)} Why this matches</div>
+            <div class="explain-error">No explanation available${item.error ? ": " + esc(item.error) : "."}</div>`;
+        }
+      }
+
+      // ── Unsplash helpers ───────────────────────────────────────────────────────
+      async function loadUnsplashForCard(imgEl, propertyId) {
+        const p = currentResults.find((r) => String(r.property_id) === String(propertyId));
+        if (!p) return;
+        const url = await fetchUnsplashImage(p);
+        if (url) imgEl.src = url;
+      }
+
+      async function loadImagesForResults(results) {
+        for (const p of results) {
+          if (p.image_url) continue;
+          const imgEl = document.getElementById(`img-${p.property_id}`);
+          if (!imgEl) continue;
+          const url = await fetchUnsplashImage(p);
+          if (url) { imgEl.src = url; imgEl.style.background = ""; }
         }
       }
 
@@ -1736,30 +928,6 @@
       }
       function sparkSVG(size = 15) {
         return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>`;
-      }
-
-      // ── Called by onerror on cards whose own image_url failed ─────────────────
-      async function loadUnsplashForCard(imgEl, propertyId) {
-        const p = currentResults.find(
-          (r) => String(r.property_id) === String(propertyId),
-        );
-        if (!p) return;
-        const url = await fetchUnsplashImage(p);
-        if (url) imgEl.src = url;
-      }
-
-      // ── After rendering cards with no image_url, fetch Unsplash images ─────────
-      async function loadImagesForResults(results) {
-        for (const p of results) {
-          if (p.image_url) continue; // already has an image
-          const imgEl = document.getElementById(`img-${p.property_id}`);
-          if (!imgEl) continue;
-          const url = await fetchUnsplashImage(p);
-          if (url) {
-            imgEl.src = url;
-            imgEl.style.background = "";
-          }
-        }
       }
     </script>
   </body>
