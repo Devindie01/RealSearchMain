@@ -254,7 +254,7 @@ def search(req: SearchRequest):
     try:
         with get_client() as client:
             retrieved_ids = run_pipeline_test(
-                user_query=req.query,
+                user_query=enriched_query,
                 location = req.location,
                 price_min=req.price_min,
                 price_max=req.price_max,

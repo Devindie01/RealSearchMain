@@ -103,6 +103,7 @@ def build_filters(price_min, price_max, bedrooms, bathrooms,
 
     # ── Geo filter (native Weaviate GeoCoordinates) ───────────────────────────
     if location:
+        print("sgsjrbgsub")
         coords = fetch_location_coordinates(location)
         if coords:
             lat, lon = coords
@@ -153,14 +154,16 @@ def run_pipeline_test(
     classification = {"type": type_label}
 
     print(f"Type: {classification['type']}")
-    if entities["property_type"]: property_type = entities["property_type"][0]
-    if entities["contract_type"]: contract_type = entities["contract_type"]
-    if entities["location"]: location = entities["location"][0]
-    if entities["no_of_bedrooms"]: bedrooms = entities["no_of_bedrooms"]
-    if entities["no_of_bathrooms"]: bathrooms = entities["no_of_bathrooms"]
-    if entities["area"]: area = entities["area"]
+    property_type = entities.get("property_type")[0] if entities.get("property_type") else None
+    contract_type = entities.get("contract_type") if entities.get("contract_type") else None
+    location = entities.get("location")[0] if entities.get("location") else None
+    bedrooms = entities.get("no_of_bedrooms") if entities.get("no_of_bedrooms") else None
+    bathrooms = entities.get("no_of_bathrooms") if entities.get("no_of_bathrooms") else None
+    area = entities.get("area")[0] if entities.get("area") else None
+    
+    print("location:", location)
 
-    wv_filter = build_filters(price_min, price_max, bedrooms, bathrooms, location = location, property_type = property_type, contract_type = contract_type)
+    wv_filter = build_filters(price_min, price_max, bedrooms=bedrooms, bathrooms=bathrooms, location=location, property_type=property_type, contract_type=contract_type)
 
     if classification["type"] == "Semantic":
 
