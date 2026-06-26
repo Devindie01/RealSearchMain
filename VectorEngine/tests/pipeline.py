@@ -32,13 +32,32 @@ def _to_int(val):
 
 from weaviate.classes.query import Filter, GeoCoordinate  # GeoCoordinate for the geo filter
 
-GEO_RADIUS_KM = 25.0
+GEO_RADIUS_KM = 50.0
+
+
+# import os
+import httpx
+from urllib.parse import quote
+from dotenv import load_dotenv
+
+
 
 
 def fetch_location_coordinates(location: str) -> tuple[float, float] | None:
+
     """
+
     Resolve a location name to (lat, lon) using the OpenStreetMap Nominatim API.
+
     """
+    if location.lower() == "wellawatte":
+        return (6.874, 79.861)  # Approximate coordinates for Wellawatte, Colombo
+    if location.lower() == "colombo 6":
+        return (6.874, 79.860)  # Approximate coordinates for Colombo 6, Colombo
+    if location.lower() == "malabe":
+        return (6.906, 79.969)  # Approximate coordinates for Malabe, Colombo
+    if not location:
+        return None
     if not location:
         return None
 
@@ -61,7 +80,6 @@ def fetch_location_coordinates(location: str) -> tuple[float, float] | None:
         print(f"  ⚠️  fetch_location_coordinates failed: {e}")
 
     return None
-
 
 def build_filters(price_min, price_max, bedrooms, bathrooms,
                   property_type=None, contract_type=None,
@@ -99,7 +117,7 @@ def build_filters(price_min, price_max, bedrooms, bathrooms,
 
     # ── Contract type (exact) ─────────────────────────────────────────────────
     if contract_type:
-        filters.append(Filter.by_property("contractType").equal(contract_type))
+        filters.append(Filter.by_property("contractType").equal(contract_type.lower())) #ignore the case of the contract type
 
     # ── Geo filter (native Weaviate GeoCoordinates) ───────────────────────────
     if location:
@@ -160,8 +178,10 @@ def run_pipeline_test(
     bedrooms = entities.get("no_of_bedrooms") if entities.get("no_of_bedrooms") else None
     bathrooms = entities.get("no_of_bathrooms") if entities.get("no_of_bathrooms") else None
     area = entities.get("area")[0] if entities.get("area") else None
+
+
     
-    print("location:", location)
+    print(f"Property Type: {property_type}, Contract Type: {contract_type}, Location: {location}, Bedrooms: {bedrooms}, Bathrooms: {bathrooms}, Area: {area}")
 
     wv_filter = build_filters(price_min, price_max, bedrooms=bedrooms, bathrooms=bathrooms, location=location, property_type=property_type, contract_type=contract_type)
 
@@ -170,9 +190,9 @@ def run_pipeline_test(
         alpha = compute_alpha_from_entities(user_query, entities, lambda_)
         print(f"Computed Alpha: {alpha}")
 
-        properties = client.collections.get("FypCollection")
+        properties = client.collections.get("Fyp_demo")
 
-        query_kwargs = dict(query=user_query, alpha=alpha, limit=10)
+        query_kwargs = dict(query=user_query, alpha=alpha, limit=100)
         if wv_filter is not None:
             query_kwargs["filters"] = wv_filter
 
@@ -197,9 +217,9 @@ def run_pipeline_test(
         all_properties = []
 
         for i, pq in enumerate(predicted_queries, 1):
-            properties = client.collections.get("FypCollection")
+            properties = client.collections.get("Fyp_demo")
 
-            query_kwargs = dict(query=pq, alpha=1, limit=10)
+            query_kwargs = dict(query=pq, alpha=1, limit=100)
             if wv_filter is not None:
                 query_kwargs["filters"] = wv_filter
 
@@ -222,7 +242,7 @@ def run_pipeline_test(
                     seen.add(pid)
                     retrieved_ids.append(pid)
 
-        final_ids = random.sample(retrieved_ids, min(10, len(retrieved_ids)))
+        final_ids = random.sample(retrieved_ids, min(50, len(retrieved_ids)))
         return final_ids if final_ids else []
 
     else:
@@ -247,3 +267,4 @@ def compute_alpha(features):
     alpha = max(0.1, min(0.9, alpha))
 
     return alpha
+
