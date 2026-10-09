@@ -185,7 +185,7 @@ def fetch_properties_from_csv(property_ids: list) -> list:
 # ── Fetch property description from Weaviate (with CSV fallback) ──────────────
 def fetch_property_description(client, property_id: str) -> str:
     try:
-        collection = client.collections.get("Fyp_demo")
+        collection = client.collections.get("RealSearchPropData")
         result = collection.query.fetch_objects(
             filters=Filter.by_property("propertyId").equal(str(property_id)),
             return_properties=["description"],

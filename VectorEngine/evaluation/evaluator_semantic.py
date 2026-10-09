@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import csv
@@ -30,19 +31,19 @@ from dotenv import load_dotenv
 
 # ── Config ────────────────────────────────────────────────────────────────────
 START_QUERY_ID = 2
-END_QUERY_ID   = 208
-MAX_RETRIES    = 3
-RETRY_DELAY    = 10
-QUERY_DELAY    = 1.0
+END_QUERY_ID = 208
+MAX_RETRIES = 3
+RETRY_DELAY = 10
+QUERY_DELAY = 1.0
 
 failed_queries = []
 
-current_dir     = os.path.dirname(os.path.abspath(__file__))
-csv_path        = os.path.join(current_dir, "final_ground_truth.csv")
-per_query_out   = os.path.join(current_dir, "per_query_results_semantic.json")
-aggregated_out  = os.path.join(current_dir, "results_semantic.json")
-failed_out      = os.path.join(current_dir, "failed_queries_semantic.json")
-env_path        = os.path.join(current_dir, "..", "app", ".env")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(current_dir, "final_ground_truth.csv")
+per_query_out = os.path.join(current_dir, "per_query_results_semantic.json")
+aggregated_out = os.path.join(current_dir, "results_semantic.json")
+failed_out = os.path.join(current_dir, "failed_queries_semantic.json")
+env_path = os.path.join(current_dir, "..", "app", ".env")
 
 load_dotenv(dotenv_path=env_path)
 print(f"✅ .env loaded from: {env_path}")
@@ -85,7 +86,7 @@ def load_existing_results(path):
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
             try:
-                results  = json.load(f)
+                results = json.load(f)
                 done_ids = set(str(r["query_id"]) for r in results)
                 print(f"♻️  Resuming — {len(done_ids)} queries already evaluated")
                 return results, done_ids
@@ -100,6 +101,7 @@ def save_per_query(results, path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=4)
 
+
 def save_failed(failed, path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(failed, f, indent=4)
@@ -110,11 +112,11 @@ def run_pipeline_test(user_query, client):
     print(f"\n{'='*60}\nQUERY: {user_query}")
 
     user_query = clean_query(user_query)
-    res        = extract_entities_from_user_query(user_query)
-    entities   = res["entities"]
+    res = extract_entities_from_user_query(user_query)
+    entities = res["entities"]
     print(f"Extracted Entities: {entities}")
 
-    type_label     = queryclassifier(entities)
+    type_label = queryclassifier(entities)
     classification = {"type": type_label}
     print(f"Type: {classification['type']}")
 
@@ -128,8 +130,8 @@ def run_pipeline_test(user_query, client):
         alpha = compute_alpha_from_entities(user_query, entities)
         print(f"Computed Alpha: {alpha}")
 
-        properties = client.collections.get("Fyp_demo")
-        results    = properties.query.hybrid(
+        properties = client.collections.get("RealSearchPropData")
+        results = properties.query.hybrid(
             query=user_query,
             alpha=alpha,
             limit=100,
@@ -138,7 +140,7 @@ def run_pipeline_test(user_query, client):
         retrieved_ids = []
         if results.objects:
             for i, obj in enumerate(results.objects, 1):
-                p   = obj.properties
+                p = obj.properties
                 pid = _to_int(p.get("propertyId"))
                 retrieved_ids.append(pid)
                 print(f"  [{i}] {p.get('title')}")
@@ -180,18 +182,18 @@ def evaluate(queries):
     p, r, f1, ndcg = [], [], [], []
     for q in queries:
         retrieved = q["retrieved"]
-        relevant  = q["relevant"]
+        relevant = q["relevant"]
         p.append(precision_at_k(retrieved, relevant))
         r.append(recall_at_k(retrieved, relevant))
         f1.append(f1_at_k(retrieved, relevant))
         ndcg.append(ndcg_at_k(retrieved, relevant))
     return {
-        "Precision@10": sum(p)    / len(p),
-        "Recall@10":    sum(r)    / len(r),
-        "F1@10":        sum(f1)   / len(f1),
-        "NDCG@10":      sum(ndcg) / len(ndcg),
-        "MRR":          mean_reciprocal_rank(queries),
-        "MAP":          mean_average_precision(queries),
+        "Precision@10": sum(p) / len(p),
+        "Recall@10": sum(r) / len(r),
+        "F1@10": sum(f1) / len(f1),
+        "NDCG@10": sum(ndcg) / len(ndcg),
+        "MRR": mean_reciprocal_rank(queries),
+        "MAP": mean_average_precision(queries),
     }
 
 
@@ -212,9 +214,9 @@ if __name__ == "__main__":
         for r in per_query_results
     ]
 
-    semantic_count  = 0
+    semantic_count = 0
     ambiguous_count = 0
-    total           = len(data)
+    total = len(data)
 
     print(f"\n🚀 Starting evaluation for {total} queries...\n{'='*60}")
 
@@ -222,9 +224,9 @@ if __name__ == "__main__":
         print("✅ Weaviate client connected\n")
 
         for i, item in enumerate(data, start=1):
-            query_id   = str(item["query_id"])
+            query_id = str(item["query_id"])
             query_text = item["query"]
-            relevant   = item["relevant"]
+            relevant = item["relevant"]
 
             if query_id in done_ids:
                 print(f"⏭️  [{i}/{total}] Query ID {query_id} already done — skipping")
@@ -241,29 +243,37 @@ if __name__ == "__main__":
                 # ── Ambiguous — skip from evaluation entirely ─────────────
                 if retrieved is None:
                     ambiguous_count += 1
-                    print(f"⏭️  [{i}/{total}] Query ID {query_id} — Ambiguous, excluded")
+                    print(
+                        f"⏭️  [{i}/{total}] Query ID {query_id} — Ambiguous, excluded"
+                    )
                     continue
 
                 # ── Semantic — save and accumulate metrics ────────────────
                 semantic_count += 1
                 row = {
-                    "query_id":     query_id,
-                    "retrieved":    retrieved,
-                    "relevant":     relevant,
+                    "query_id": query_id,
+                    "retrieved": retrieved,
+                    "relevant": relevant,
                     "precision@10": precision_at_k(retrieved, relevant),
-                    "recall@10":    recall_at_k(retrieved, relevant),
-                    "f1@10":        f1_at_k(retrieved, relevant),
-                    "ndcg@10":      ndcg_at_k(retrieved, relevant),
+                    "recall@10": recall_at_k(retrieved, relevant),
+                    "f1@10": f1_at_k(retrieved, relevant),
+                    "ndcg@10": ndcg_at_k(retrieved, relevant),
                 }
                 per_query_results.append(row)
-                queries_for_metrics.append({"retrieved": retrieved, "relevant": relevant})
+                queries_for_metrics.append(
+                    {"retrieved": retrieved, "relevant": relevant}
+                )
                 done_ids.add(query_id)
                 save_per_query(per_query_results, per_query_out)
-                print(f"  💾 Saved — precision@10={row['precision@10']:.4f}  ndcg@10={row['ndcg@10']:.4f}")
+                print(
+                    f"  💾 Saved — precision@10={row['precision@10']:.4f}  ndcg@10={row['ndcg@10']:.4f}"
+                )
                 print(f"✅ [{i}/{total}] Query ID {query_id} complete")
 
             except Exception as e:
-                print(f"❌ [{i}/{total}] Query ID {query_id} failed after all retries: {e}")
+                print(
+                    f"❌ [{i}/{total}] Query ID {query_id} failed after all retries: {e}"
+                )
                 traceback.print_exc()
                 failed_queries.append({"query_id": query_id, "error": str(e)})
                 save_failed(failed_queries, failed_out)

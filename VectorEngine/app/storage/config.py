@@ -6,7 +6,7 @@
 
 # Example configuration for Weaviate //devindie-cse
 WEAVIATE_URL = (
-    "1zwktmrtwyhm8i0m5i03a.c0.eu-central-1.aws.weaviate.cloud"  # or cloud endpoint
+    "grpc-1zwktmrtwyhm8i0m5i03a.c0.eu-central-1.aws.weaviate.cloud"  # or cloud endpoint
 )
 WEAVIATE_API_KEY = "V0Z4c0tXNFBLTWY4ZnBCSV9RN0h3L2o3SW5zTjAvMlZ6TjlxODFnMFV4bG9vWUJZQUh1S0VnUWhWWFprPV92MjAw"
 

@@ -190,7 +190,7 @@ def run_pipeline_test(
         alpha = compute_alpha_from_entities(user_query, entities, lambda_)
         print(f"Computed Alpha: {alpha}")
 
-        properties = client.collections.get("Fyp_demo")
+        properties = client.collections.get("RealSearchPropData")
 
         query_kwargs = dict(query=user_query, alpha=alpha, limit=100)
         if wv_filter is not None:
@@ -217,7 +217,7 @@ def run_pipeline_test(
         all_properties = []
 
         for i, pq in enumerate(predicted_queries, 1):
-            properties = client.collections.get("Fyp_demo")
+            properties = client.collections.get("RealSearchPropData")
 
             query_kwargs = dict(query=pq, alpha=1, limit=100)
             if wv_filter is not None:
