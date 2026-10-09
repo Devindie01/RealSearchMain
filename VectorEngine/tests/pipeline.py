@@ -50,14 +50,6 @@ def fetch_location_coordinates(location: str) -> tuple[float, float] | None:
     Resolve a location name to (lat, lon) using the OpenStreetMap Nominatim API.
 
     """
-    if location.lower() == "wellawatte":
-        return (6.874, 79.861)  # Approximate coordinates for Wellawatte, Colombo
-    if location.lower() == "colombo 6":
-        return (6.874, 79.860)  # Approximate coordinates for Colombo 6, Colombo
-    if location.lower() == "malabe":
-        return (6.906, 79.969)  # Approximate coordinates for Malabe, Colombo
-    if not location:
-        return None
     if not location:
         return None
 
@@ -134,7 +126,6 @@ def build_filters(
 
     # ── Geo filter (native Weaviate GeoCoordinates) ───────────────────────────
     if location:
-        print("sgsjrbgsub")
         coords = fetch_location_coordinates(location)
         if coords:
             lat, lon = coords
@@ -237,7 +228,14 @@ def run_pipeline_test(
                 retrieved_ids.append(pid)
                 print(f" [{i}] {p.get('title')})")
         else:
-            print(" No results found.")
+            print(" Running pure vector search....")
+            results = properties.query.hybrid(query=user_query, alpha=1.0, limit=100)
+            if results.objects:
+                for i, obj in enumerate(results.objects, 1):
+                    p = obj.properties
+                    pid = _to_int(p.get("propertyId"))
+                    retrieved_ids.append(pid)
+                    print(f" [{i}] {p.get('title')})")
 
         return retrieved_ids
 
