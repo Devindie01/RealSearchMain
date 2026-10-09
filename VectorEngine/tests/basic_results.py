@@ -21,9 +21,9 @@ from app.query.query_expanision.ambiguous_query_handler import (
 from app.query.formatter import create_weaviate_filter
 from app.query.executor.query_executor import QueryEmbedder, get_chain
 
-
 # Initialize the chain
 chain = get_chain()
+
 
 def process_queries_to_file(csv_path, output_path):
     # 1. Load the CSV
@@ -57,6 +57,7 @@ def process_queries_to_file(csv_path, output_path):
 
     print(f"\nDone! Results saved to {output_path}")
 
+
 def basic_run_pipeline_test(user_query, client):
     print(f"\n{'='*60}\nQUERY: {user_query}")
 
@@ -83,7 +84,7 @@ def basic_run_pipeline_test(user_query, client):
         wv_filter = create_weaviate_filter(result_segment)
 
         # Step E: Weaviate Hybrid Search
-        properties = client.collections.get("RealSearchPropData")
+        properties = client.collections.get("RealSearchPropData1")
 
         results = properties.query.hybrid(
             query=user_query,  # Keyword part
@@ -107,7 +108,7 @@ def basic_run_pipeline_test(user_query, client):
         for i, pq in enumerate(predicted_queries, 1):
             embedder = QueryEmbedder()
             query_vector = embedder.get_vector(pq)
-            properties = client.collections.get("RealSearchPropData")
+            properties = client.collections.get("RealSearchPropData1")
 
             results = properties.query.hybrid(
                 query=user_query,  # Keyword part

@@ -30,7 +30,10 @@ def _to_int(val):
         return val
 
 
-from weaviate.classes.query import Filter, GeoCoordinate  # GeoCoordinate for the geo filter
+from weaviate.classes.query import (
+    Filter,
+    GeoCoordinate,
+)  # GeoCoordinate for the geo filter
 
 GEO_RADIUS_KM = 50.0
 
@@ -41,10 +44,7 @@ from urllib.parse import quote
 from dotenv import load_dotenv
 
 
-
-
 def fetch_location_coordinates(location: str) -> tuple[float, float] | None:
-
     """
 
     Resolve a location name to (lat, lon) using the OpenStreetMap Nominatim API.
@@ -67,6 +67,7 @@ def fetch_location_coordinates(location: str) -> tuple[float, float] | None:
 
     try:
         import httpx
+
         response = httpx.get(url, params=params, headers=headers, timeout=5.0)
         response.raise_for_status()
         data = response.json()
@@ -81,9 +82,17 @@ def fetch_location_coordinates(location: str) -> tuple[float, float] | None:
 
     return None
 
-def build_filters(price_min, price_max, bedrooms, bathrooms,
-                  property_type=None, contract_type=None,
-                  location=None, client=None):
+
+def build_filters(
+    price_min,
+    price_max,
+    bedrooms,
+    bathrooms,
+    property_type=None,
+    contract_type=None,
+    location=None,
+    client=None,
+):
     filters = []
 
     # ── Price (±10% margin) ───────────────────────────────────────────────────
@@ -93,7 +102,9 @@ def build_filters(price_min, price_max, bedrooms, bathrooms,
             & Filter.by_property("priceLKR").less_or_equal(price_max * 1.10)
         )
     elif price_min is not None:
-        filters.append(Filter.by_property("priceLKR").greater_or_equal(price_min * 0.90))
+        filters.append(
+            Filter.by_property("priceLKR").greater_or_equal(price_min * 0.90)
+        )
     elif price_max is not None:
         filters.append(Filter.by_property("priceLKR").less_or_equal(price_max * 1.10))
 
@@ -117,7 +128,9 @@ def build_filters(price_min, price_max, bedrooms, bathrooms,
 
     # ── Contract type (exact) ─────────────────────────────────────────────────
     if contract_type:
-        filters.append(Filter.by_property("contractType").equal(contract_type.lower())) #ignore the case of the contract type
+        filters.append(
+            Filter.by_property("contractType").equal(contract_type.lower())
+        )  # ignore the case of the contract type
 
     # ── Geo filter (native Weaviate GeoCoordinates) ───────────────────────────
     if location:
@@ -125,7 +138,9 @@ def build_filters(price_min, price_max, bedrooms, bathrooms,
         coords = fetch_location_coordinates(location)
         if coords:
             lat, lon = coords
-            print(f"  📍 Geo filter: {location!r} → ({lat:.4f}, {lon:.4f}) ±{GEO_RADIUS_KM} km")
+            print(
+                f"  📍 Geo filter: {location!r} → ({lat:.4f}, {lon:.4f}) ±{GEO_RADIUS_KM} km"
+            )
             filters.append(
                 Filter.by_property("geoLocation").within_geo_range(
                     coordinate=GeoCoordinate(latitude=lat, longitude=lon),
@@ -152,8 +167,8 @@ def run_pipeline_test(
     bathrooms,
     area,
     client,
-    location=None,           # ← add this
-    property_type=None,      # ← add this
+    location=None,  # ← add this
+    property_type=None,  # ← add this
     contract_type=None,
     lambda_: float = 0.5,
 ):
@@ -172,25 +187,41 @@ def run_pipeline_test(
     classification = {"type": type_label}
 
     print(f"Type: {classification['type']}")
-    property_type = entities.get("property_type")[0] if entities.get("property_type") else None
-    contract_type = entities.get("contract_type") if entities.get("contract_type") else None
+    property_type = (
+        entities.get("property_type")[0] if entities.get("property_type") else None
+    )
+    contract_type = (
+        entities.get("contract_type") if entities.get("contract_type") else None
+    )
     location = entities.get("location")[0] if entities.get("location") else None
-    bedrooms = entities.get("no_of_bedrooms") if entities.get("no_of_bedrooms") else None
-    bathrooms = entities.get("no_of_bathrooms") if entities.get("no_of_bathrooms") else None
+    bedrooms = (
+        entities.get("no_of_bedrooms") if entities.get("no_of_bedrooms") else None
+    )
+    bathrooms = (
+        entities.get("no_of_bathrooms") if entities.get("no_of_bathrooms") else None
+    )
     area = entities.get("area")[0] if entities.get("area") else None
 
+    print(
+        f"Property Type: {property_type}, Contract Type: {contract_type}, Location: {location}, Bedrooms: {bedrooms}, Bathrooms: {bathrooms}, Area: {area}"
+    )
 
-    
-    print(f"Property Type: {property_type}, Contract Type: {contract_type}, Location: {location}, Bedrooms: {bedrooms}, Bathrooms: {bathrooms}, Area: {area}")
-
-    wv_filter = build_filters(price_min, price_max, bedrooms=bedrooms, bathrooms=bathrooms, location=location, property_type=property_type, contract_type=contract_type)
+    wv_filter = build_filters(
+        price_min,
+        price_max,
+        bedrooms=bedrooms,
+        bathrooms=bathrooms,
+        location=location,
+        property_type=property_type,
+        contract_type=contract_type,
+    )
 
     if classification["type"] == "Semantic":
 
         alpha = compute_alpha_from_entities(user_query, entities, lambda_)
         print(f"Computed Alpha: {alpha}")
 
-        properties = client.collections.get("RealSearchPropData")
+        properties = client.collections.get("RealSearchPropData1")
 
         query_kwargs = dict(query=user_query, alpha=alpha, limit=100)
         if wv_filter is not None:
@@ -217,7 +248,7 @@ def run_pipeline_test(
         all_properties = []
 
         for i, pq in enumerate(predicted_queries, 1):
-            properties = client.collections.get("RealSearchPropData")
+            properties = client.collections.get("RealSearchPropData1")
 
             query_kwargs = dict(query=pq, alpha=1, limit=100)
             if wv_filter is not None:
@@ -267,4 +298,3 @@ def compute_alpha(features):
     alpha = max(0.1, min(0.9, alpha))
 
     return alpha
-

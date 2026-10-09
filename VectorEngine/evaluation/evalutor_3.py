@@ -76,7 +76,7 @@ def run_pipeline_test(user_query, client):
         alpha = compute_alpha_from_entities(user_query, entities)
         print(f"Computed Alpha: {alpha}")
 
-        properties = client.collections.get("RealSearchPropData")
+        properties = client.collections.get("RealSearchPropData1")
 
         results = properties.query.hybrid(
             query=user_query,
@@ -105,7 +105,7 @@ def run_pipeline_test(user_query, client):
     #     all_properties = []
 
     #     for i, pq in enumerate(predicted_queries, 1):
-    #         properties = client.collections.get("RealSearchPropData")
+    #         properties = client.collections.get("RealSearchPropData1")
 
     #         results = properties.query.hybrid(
     #             query=pq,  # ✅ IMPORTANT: use pq, not user_query
