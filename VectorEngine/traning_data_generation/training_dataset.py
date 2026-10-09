@@ -34,7 +34,10 @@ ground_truth_path = r"D:\FYP\RealSearch\VectorEngine\ground truth\ground_truth_1
 
 results_log = []
 
-output_path = r"D:\FYP\RealSearch\VectorEngine\traning_data_generation\alpha_training_data.csv"
+output_path = (
+    r"D:\FYP\RealSearch\VectorEngine\traning_data_generation\alpha_training_data.csv"
+)
+
 
 def training_data_pipeline_test(query_id, user_query, client, relevant_ids):
     # print(f"\n{'='*60}\nQUERY: {user_query}")
@@ -53,11 +56,9 @@ def training_data_pipeline_test(query_id, user_query, client, relevant_ids):
 
     print(f"Best Alpha: {best_alpha}")
     # STORE instead of print
-    results_log.append({
-        "query_id": query_id,
-        "features": features,
-        "alpha": best_alpha
-    })
+    results_log.append(
+        {"query_id": query_id, "features": features, "alpha": best_alpha}
+    )
 
 
 def entity_extraction(user_query):
@@ -133,7 +134,7 @@ def run_hybrid_search(user_query, client, alpha, k=10):
 
     # wv_filter = create_weaviate_filter(result_segment)
 
-    properties = client.collections.get("Fyp_demo")
+    properties = client.collections.get("RealSearchPropData")
 
     results = properties.query.hybrid(
         query=user_query,
@@ -152,18 +153,19 @@ def run_hybrid_search(user_query, client, alpha, k=10):
 
     return retrieved_ids
 
+
 def compute_best_alpha(query, client, relevant_ids, k=10):
-    alphas = [0.0,0.25,0.5,0.75,1.0]
+    alphas = [0.0, 0.25, 0.5, 0.75, 1.0]
     ndcg_scores = []
 
     for alpha in alphas:
         retrieved_ids = run_hybrid_search(query, client, alpha, k)
-        
+
         # print("Retrieved:", retrieved_ids)
         # print("Relevant:", relevant_ids)
 
         ndcg = compute_ndcg(retrieved_ids, relevant_ids, k)
-        ndcg_scores.append(ndcg)    
+        ndcg_scores.append(ndcg)
         # print(f"Alpha: {alpha}, NDCG@{k}: {ndcg:.4f}")
 
     total_score = sum(ndcg_scores)
@@ -176,11 +178,8 @@ def compute_best_alpha(query, client, relevant_ids, k=10):
 
     return weighted_alpha
 
-queries_df = pd.read_csv(
-    queries_path,
-    encoding="utf-8",
-    engine="python"
-)
+
+queries_df = pd.read_csv(queries_path, encoding="utf-8", engine="python")
 
 gt_df = pd.read_csv(ground_truth_path)
 
@@ -218,7 +217,8 @@ with get_client() as client:
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
 df = pd.DataFrame(results_log)
-df["features"] = df["features"].apply(lambda x: json.dumps(x, ensure_ascii=False, default=str))
+df["features"] = df["features"].apply(
+    lambda x: json.dumps(x, ensure_ascii=False, default=str)
+)
 
 df.to_csv(output_path, index=False, encoding="utf-8")
-

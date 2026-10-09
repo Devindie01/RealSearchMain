@@ -51,7 +51,7 @@ def fetch_property_description(client, property_id) -> str:
     try:
         from weaviate.classes.query import Filter
 
-        collection = client.collections.get("Fyp_demo")
+        collection = client.collections.get("RealSearchPropData")
         result = collection.query.fetch_objects(
             filters=Filter.by_property("propertyId").equal(str(property_id)),
             return_properties=["description"],

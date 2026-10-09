@@ -12,7 +12,7 @@ from sentence_transformers import SentenceTransformer
 import faiss
 
 BASE_URL = "https://openrouter.ai/api/v1"
-MODEL_NAME1 = "google/gemini-2.5-flash-lite-preview-09-2025"
+MODEL_NAME1 = "google/gemini-2.5-flash"
 
 llm = ChatOpenAI(
     model=MODEL_NAME1,

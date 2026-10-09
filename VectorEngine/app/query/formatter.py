@@ -16,10 +16,7 @@ def create_weaviate_filter(segment: QuerySegment):
         if isinstance(types, str):
             types = [types]
 
-        type_filters = [
-            Filter.by_property("propertyType").equal(t)
-            for t in types if t
-        ]
+        type_filters = [Filter.by_property("propertyType").equal(t) for t in types if t]
 
         if len(type_filters) == 1:
             filters.append(type_filters[0])
@@ -37,16 +34,19 @@ def create_weaviate_filter(segment: QuerySegment):
                 Filter.by_property("priceUnit").less_or_equal(segment.price_unit)
             )
         else:
-            #use exchange rate to convert to LKR and filter
-            filters.append(Filter.by_property("priceLKR").less_or_equal(segment.price_max))
+            # use exchange rate to convert to LKR and filter
+            filters.append(
+                Filter.by_property("priceLKR").less_or_equal(segment.price_max)
+            )
 
     if segment.location:
-        locs = segment.location if isinstance(segment.location, list) else [segment.location]
+        locs = (
+            segment.location
+            if isinstance(segment.location, list)
+            else [segment.location]
+        )
 
-        loc_filters = [
-            Filter.by_property("location").equal(loc)
-            for loc in locs if loc
-        ]
+        loc_filters = [Filter.by_property("location").equal(loc) for loc in locs if loc]
 
         if len(loc_filters) == 1:
             filters.append(loc_filters[0])
@@ -78,7 +78,7 @@ def create_weaviate_filter(segment: QuerySegment):
 
 def execute_search(user_input, query_vector, result_segment, client):
     # 1. Get the collection
-    houses = client.collections.get("Fyp_demo")
+    houses = client.collections.get("RealSearchPropData")
 
     # 2. Build the filter
     wv_filter = create_weaviate_filter(result_segment)
@@ -100,7 +100,7 @@ def execute_search(user_input, query_vector, result_segment, client):
 
 
 def execute_weighted_search(user_query, query_vector, weights, client):
-    collection = client.collections.get("Fyp_demo")
+    collection = client.collections.get("RealSearchPropData")
 
     # 2. Convert weights into Weaviate's "Property Boosting" format
     # This creates a list like ["location^3", "property_type^2", "description^1"]

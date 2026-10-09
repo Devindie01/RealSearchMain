@@ -83,7 +83,7 @@ def basic_run_pipeline_test(user_query, client):
         wv_filter = create_weaviate_filter(result_segment)
 
         # Step E: Weaviate Hybrid Search
-        properties = client.collections.get("Fyp_demo")
+        properties = client.collections.get("RealSearchPropData")
 
         results = properties.query.hybrid(
             query=user_query,  # Keyword part
@@ -107,7 +107,7 @@ def basic_run_pipeline_test(user_query, client):
         for i, pq in enumerate(predicted_queries, 1):
             embedder = QueryEmbedder()
             query_vector = embedder.get_vector(pq)
-            properties = client.collections.get("Fyp_demo")
+            properties = client.collections.get("RealSearchPropData")
 
             results = properties.query.hybrid(
                 query=user_query,  # Keyword part
