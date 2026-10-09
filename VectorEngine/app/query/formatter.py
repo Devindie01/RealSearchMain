@@ -78,7 +78,7 @@ def create_weaviate_filter(segment: QuerySegment):
 
 def execute_search(user_input, query_vector, result_segment, client):
     # 1. Get the collection
-    houses = client.collections.get("RealSearchPropData")
+    houses = client.collections.get("Fyp_demo")
 
     # 2. Build the filter
     wv_filter = create_weaviate_filter(result_segment)
@@ -100,7 +100,7 @@ def execute_search(user_input, query_vector, result_segment, client):
 
 
 def execute_weighted_search(user_query, query_vector, weights, client):
-    collection = client.collections.get("RealSearchPropData")
+    collection = client.collections.get("Fyp_demo")
 
     # 2. Convert weights into Weaviate's "Property Boosting" format
     # This creates a list like ["location^3", "property_type^2", "description^1"]

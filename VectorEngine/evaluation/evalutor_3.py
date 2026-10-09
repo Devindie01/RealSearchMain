@@ -76,14 +76,14 @@ def run_pipeline_test(user_query, client):
         alpha = compute_alpha_from_entities(user_query, entities)
         print(f"Computed Alpha: {alpha}")
 
-        properties = client.collections.get("RealSearchPropData")
+        properties = client.collections.get("Fyp_demo")
 
         results = properties.query.hybrid(
             query=user_query,
             # vector=query_vector,
             # filters=wv_filter,
             alpha=alpha,
-            limit=10,
+            limit=100,
         )
 
         retrieved_ids = []

@@ -133,7 +133,7 @@ def run_hybrid_search(user_query, client, alpha, k=10):
 
     # wv_filter = create_weaviate_filter(result_segment)
 
-    properties = client.collections.get("RealSearchPropData")
+    properties = client.collections.get("Fyp_demo")
 
     results = properties.query.hybrid(
         query=user_query,

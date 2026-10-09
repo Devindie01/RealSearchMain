@@ -12,7 +12,7 @@ from sentence_transformers import SentenceTransformer
 import faiss
 
 BASE_URL = "https://openrouter.ai/api/v1"
-MODEL_NAME1 = "google/gemini-2.0-flash-001"
+MODEL_NAME1 = "google/gemini-2.5-flash-lite-preview-09-2025"
 
 llm = ChatOpenAI(
     model=MODEL_NAME1,
@@ -47,11 +47,7 @@ Each candidate query MUST differ meaningfully in at least ONE of:
 - Use case (residential living vs investment vs hospitality)
 - Scale (compact vs spacious vs large-scale property)
 
-LOCATION VARIATION (use different regions where plausible):
-- Beach towns: Mirissa, Bentota, Unawatuna, Hikkaduwa, Negombo
-- Hill country: Kandy, Nuwara Eliya, Ella, Hatton
-- Urban centers: Colombo, Galle, Jaffna
-- Suburban areas: Battaramulla, Rajagiriya, Maharagama
+
 
 RULES:
 - Stay strictly within real estate domain.
